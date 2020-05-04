@@ -6,6 +6,7 @@ endif()
 
 set (COMMON_SOURCE
     npsql.c
+    networking.c
     )
 
 if (WIN32)
@@ -17,6 +18,7 @@ endif()
 if (UNIX)
     set (TARGET_SOURCE
         networking_linux.c
+        threads_linux.c
         ${COMMON_SOURCE}
         )
 endif()
