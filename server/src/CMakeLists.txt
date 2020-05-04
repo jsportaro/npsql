@@ -5,6 +5,7 @@ else()
 endif()
 
 set (COMMON_SOURCE
+    common.c
     npsql.c
     networking.c
     )

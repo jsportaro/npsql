@@ -8,6 +8,13 @@
 
 #define MAX_SESSION_COUNT 10
 #define MAX_MESSAGE_SIZE  1000
+
+#define SESSION_ID_LENGTH 16
+#define UUID_LENGTH 37
+
+#define PROTOCOL_ERROR -1
+#define PROTOCOL_OK 1
+
 enum NQP_MESSAGE
 {
     NQP_NO,
@@ -15,7 +22,12 @@ enum NQP_MESSAGE
     NQP_WELCOME,
     NQP_SORRY,
     NQP_GOODBYE,
-    NQP_COMEBACKSOON
+    NQP_COMEBACKSOON,
+    NQP_QUERY,
+    NQP_COLUMNDEFINITION,
+    NQP_ROWSET,
+    NQP_COMPLETED,
+    NQP_READY
 };
 
 struct nqp_header
@@ -30,6 +42,10 @@ struct session
 {
     uint32_t id;
     void *network_handle;
+
+    gpsql_thread query_loop;
+    struct session_manager *manager;
+    char session_id[UUID_LENGTH];
 };
 
 struct session_manager
@@ -42,11 +58,11 @@ struct session_manager
 
 void server_start(uint16_t port, struct session_manager *session_manager);
 void session_manager_init(struct session_manager *session_manager);
-void session_manager_get_free(struct session_manager *session_manager, void *network_handle);
+void handle_connection(struct session_manager *session_manager, void *network_handle);
+void close_connection(void *network_handle);
 
-void send_buffer(void *network_handle, char *buffer, size_t size);
-void receive_buffer(void *network_handle, char *buffer, size_t size);
+void send_buffer(void *network_handle, uint8_t *buffer, size_t size);
+void receive_buffer(void *network_handle, uint8_t *buffer, size_t size);
 
-#define UNUSED(expr) do { (void)(expr); } while (0)
 
 #endif

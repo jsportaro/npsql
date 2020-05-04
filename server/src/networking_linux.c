@@ -15,7 +15,7 @@ void server_start(uint16_t port, struct session_manager *session_manager)
     int socket_desc;
     struct sockaddr_in server;
 
-    int client_socket;
+    int s;
     struct sockaddr_in client;
 
     socket_desc = socket(AF_INET, SOCK_STREAM, 0);
@@ -44,9 +44,13 @@ void server_start(uint16_t port, struct session_manager *session_manager)
 
     fprintf(stdout, "started.\n");
 
-    while ((client_socket = accept(socket_desc, (struct sockaddr *)&client, (socklen_t *)&sizeof_sockaddr_in)))
+    while ((s = accept(socket_desc, (struct sockaddr *)&client, (socklen_t *)&sizeof_sockaddr_in)))
     {
-        session_manager_get_free(session_manager, (void*) &client_socket);
+        int *client_socket = malloc(sizeof(int));
+
+        *client_socket = s;
+
+        handle_connection(session_manager, (void*)client_socket);
     }
 
     return;
@@ -57,16 +61,25 @@ error:
     return;
 }
 
-void send_buffer(void *network_handle, char *buffer, size_t size)
+void close_connection(void *network_handle)
+{
+    int client_socket = *(int *)network_handle;
+
+    free(network_handle);
+
+    close(client_socket);
+}
+
+void send_buffer(void *network_handle, uint8_t *buffer, size_t size)
 {
     int client_socket = *(int *)network_handle;
 
     write(client_socket, buffer, size);
 }
 
-void receive_buffer(void *network_handle, char *buffer, size_t size)
+void receive_buffer(void *network_handle, uint8_t *buffer, size_t size)
 {
-    UNUSED(network_handle);
-    UNUSED(buffer);
-    UNUSED(size);
+    int client_socket = *(int *)network_handle;
+    
+    recv(client_socket, buffer, size, 0);
 }
