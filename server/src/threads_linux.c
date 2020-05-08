@@ -43,7 +43,7 @@ gpsql_thread create_thread(gpsql_thread_func func, void *args)
 
     if (ret != 0)
     {
-        fprintf(stderr, "Hello message malformed\n");
+        fprintf(stderr, "Failed to create thread\n");
     }
 
     return thread;
