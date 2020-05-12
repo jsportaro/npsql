@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NpSql", "NpSql\NpSql.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NpSql.Tests", "NpSql.Tests\NpSql.Tests.csproj", "{228850EB-9123-4CD5-B159-E5AA462AB2CF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NpSql.Tests.Integration", "NpSql.Tests.Integration\NpSql.Tests.Integration.csproj", "{18733892-31BC-49E6-95EB-9A08D49264DF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{228850EB-9123-4CD5-B159-E5AA462AB2CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{228850EB-9123-4CD5-B159-E5AA462AB2CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{228850EB-9123-4CD5-B159-E5AA462AB2CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18733892-31BC-49E6-95EB-9A08D49264DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18733892-31BC-49E6-95EB-9A08D49264DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18733892-31BC-49E6-95EB-9A08D49264DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18733892-31BC-49E6-95EB-9A08D49264DF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
