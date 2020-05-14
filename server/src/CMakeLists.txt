@@ -4,10 +4,17 @@ else()
     add_compile_options(-pthread -Wall -Wextra -pedantic -Werror)
 endif()
 
+
+find_package(BISON REQUIRED)
+find_package(FLEX  REQUIRED)
+
+BISON_TARGET(npsql_parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.c)
+
 set (COMMON_SOURCE
     common.c
     npsql.c
     networking.c
+    ${BISON_npsql_parser_OUTPUTS}
     )
 
 if (WIN32)
@@ -27,6 +34,7 @@ endif()
 add_library(backend ${TARGET_SOURCE})
 
 add_executable(npsql main.c)
+
 
 if (MSVC)
 	target_link_libraries(npsql PRIVATE backend)
