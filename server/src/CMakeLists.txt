@@ -6,8 +6,8 @@ endif()
 
 set (COMMON_SOURCE
     common.c
+    nqp.c
     npsql.c
-    networking.c
     )
 
 if (WIN32)
