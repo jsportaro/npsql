@@ -1,4 +1,5 @@
 %option noyywrap nodefault yylineno case-insensitive nounput noinput
+
 %{
 
 #include <parser.h>
@@ -29,11 +30,11 @@ WHERE  { return WHERE;  }
 -?[0-9]+               { yylval.int_val = atoi(yytext); return INTNUM; }
 \"(\\.|\"\"|[^"\n])*\" { yylval.str_val = strdup(yytext); return STRING; } 
 
-[=+*/()] { return yytext[0]; }
+[=+*/(),;] { return yytext[0]; }
 
 "=" { return EQUALITY; }
 
-[A-Za-z][A-Za-z0-9] { yylval.str_val = strdup(yytext); return NAME; }
+[A-Za-z][A-Za-z0-9]* { yylval.str_val = strdup(yytext); return NAME; }
 
 [ \t\n] /* ignore whitespaces */
 .       { yyerror("Parsing error '%c'", *yytext); }

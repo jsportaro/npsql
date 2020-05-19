@@ -5,6 +5,7 @@ if (UNIX)
 endif()
 
 include_directories("include")
+include_directories(${CMAKE_BINARY_DIR}/codegen)
 
 add_subdirectory(src)
 add_subdirectory(tests)

@@ -33,41 +33,68 @@ int yylex();
 %token TABLE
 %token WHERE
 
+%type <int_val> select_expr_list table_list
+
+%start npsql_statments
+
 %%
 
 npsql_statments: npsql_statement ';'
     | npsql_statments npsql_statement ';'
+    | ';'
     ;
 
-npsql_statement: select_statement { emit("Select"); }
+npsql_statement: 
+    select_statement { emit("STATEMENT"); }
     ;
 
 select_statement: 
+      SELECT select_expr_list  { emit("SELECTNODATA %d", $2); }
+    | SELECT select_expr_list  
+      FROM table_list          { emit("SELECT"); } ;
+    ;
+
+select_expr_list: 
+      select_expr { $$ = 1; }
+    | select_expr_list ',' select_expr {$$ = $1 + 1; }
+    | '*' { emit("SELECTALL"); $$ = 1; }
+    ;
+
+table_list:
+      table_reference { $$ = 1; }
+    | table_list ',' table_reference {$$ = $1 + 1; }
+    ;
+
+select_expr: expr;
+
+table_reference:
+      NAME { emit("TABLE %s", $1); free($1); }
+
+expr: NAME { emit("COLUMN %s", $1); free($1); }
+    ;
 
 %%
 
 void
-yyerror(char *s, ...)
+emit(char *s, ...)
 {
-    extern int yylineno;
+  va_list ap;
+  va_start(ap, s);
 
-    va_list ap;
-    va_start(ap, s);
-
-    fprintf(stderr, "%d: error: ", yylineno);
-    vfprintf(stderr, s, ap);
-    fprintf(stderr, "\n");
+  printf("rpn: ");
+  vfprintf(stdout, s, ap);
+  printf("\n");
 }
 
 void
-emit(char *s, ...)
+yyerror(char *s, ...)
 {
-    extern int yylineno;
+  extern int yylineno;
 
-    va_list ap;
-    va_start(ap, s);
+  va_list ap;
+  va_start(ap, s);
 
-    fprintf(stdout, "rpn: ");
-    vfprintf(stdout, s, ap);
-    fprintf(stdout, "\n");
+  fprintf(stderr, "%d: error: ", yylineno);
+  vfprintf(stderr, s, ap);
+  fprintf(stderr, "\n");
 }

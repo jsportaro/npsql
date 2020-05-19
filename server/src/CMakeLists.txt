@@ -10,23 +10,24 @@ if(WithBison)
     find_package(BISON REQUIRED)
     find_package(FLEX  REQUIRED)
 
-    BISON_TARGET(npsql_parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.c)
-    FLEX_TARGET(npsql_lexer lexer.l ${CMAKE_CURRENT_BINARY_DIR}/lexer.c)
+    BISON_TARGET(npsql_parser parser.y ${CMAKE_BINARY_DIR}/codegen/parser.c)
+    FLEX_TARGET(npsql_lexer lexer.l ${CMAKE_BINARY_DIR}/codegen/lexer.c COMPILE_FLAGS --header-file=${CMAKE_BINARY_DIR}/codegen/lexer.h)
     
     ADD_FLEX_BISON_DEPENDENCY(npsql_lexer npsql_parser)
 
-    include_directories(${CMAKE_CURRENT_BINARY_DIR})
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/codegen)
+    include_directories(${CMAKE_BINARY_DIR}/codegen)
 
     SET (PARSER_SOURCE
         ${BISON_npsql_parser_OUTPUTS}
         ${FLEX_npsql_lexer_OUTPUTS}
         )
 
-    message("Parser generated with BISON")
+    message("** Parser generated with BISON")
 else()
     SET (PARSER_SOURCE
     )
-    message("Parser generated with roll your own")
+    message("** Parser generated with roll your own")
 endif()
 
 set (COMMON_SOURCE
