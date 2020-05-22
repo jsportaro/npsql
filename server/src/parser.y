@@ -35,17 +35,22 @@ void emit(char *s, ...);
 %token SELECT
 %token COMPARISON 
 
-%type <struct sql_stmt *> select_stmt
+%type <struct sql_stmt *> stmt select_stmt
 %type <vector_type(struct expr *)> select_expr_list
 %type <struct expr *> select_expr
 %type <struct expr *> expr factor term
 
-%start stmt;
+%start stmt_list;
 
 %%
 
+stmt_list: 
+    stmt ';'                         { vector_push(parsed->stmts, $1); }
+  | stmt_list stmt  ';'              { vector_push(parsed->stmts, $2); } 
+  ;
+
 stmt: 
-    select_stmt                      { parsed->sql = $1; }     
+    select_stmt                      { $$ = $1; }     
 ;
 
 select_stmt: 

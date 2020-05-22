@@ -3,6 +3,8 @@
 struct parsed_sql *parse_sql(char *sql, size_t length)
 {
     struct parsed_sql *parsed = malloc(sizeof(struct parsed_sql));
+
+	parsed->r =  'J';
 	yyscan_t sc;
 	int res;
 	

@@ -1,8 +1,15 @@
+#include <common.h>
 #include <sql.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+void 
+append_stmt(vector_type(struct sql_stmt *) stmt_list, struct sql_stmt * stmt)
+{
+    vector_push(stmt_list, stmt);
+}
 
 struct sql_stmt *new_select
 (vector_type(struct expr *) expr_list)
@@ -62,4 +69,83 @@ struct expr * new_infix_expr(enum expr_type type, struct expr *l, struct expr *r
     expr->r = r;
 
     return (struct expr *)expr;
+}
+
+
+
+void traverse_select(struct select * select, void (*func)(void *object));
+void traverse_expr(struct expr *expr, void (*func)(void *object));
+
+static void do_nothing(void *object)
+{
+    UNUSED(object);
+}
+
+void traverse_stmts(struct parsed_sql * parsed, void (*func)(void *object))
+{
+    if (func == NULL)
+    {
+        func = &do_nothing;
+    }
+
+    for (size_t i = 0; i < vector_size(parsed->stmts); i++)
+    {
+        switch(parsed->stmts[i]->type)
+        {
+            case STMT_SELECT:
+                traverse_select((struct select *)parsed->stmts[i], func);
+                break;
+        }
+    }
+}
+
+static void delete(void *object)
+{
+    free(object);
+}
+
+void delete_stmts(struct parsed_sql * parsed)
+{
+    traverse_stmts(parsed, &delete);
+
+    free(parsed);
+}
+
+void traverse_select(struct select * select, void (*func)(void *object))
+{
+    fprintf(stdout, "I have %d projections\n", (int)vector_size(select->expr_list));
+
+    for (size_t i = 0; i < vector_size(select->expr_list); i++)
+    {
+        traverse_expr(select->expr_list[i], func);
+        
+    }
+}
+
+void traverse_expr(struct expr *expr, void (*func)(void *object))
+{
+    struct infix_expr *infix = NULL;
+
+    switch(expr->type)
+    {
+        case EXPR_INTEGER:
+            func(expr);
+            break;
+        case EXPR_STRING:
+            func(expr);
+            break;
+        case EXPR_IDENIFIER:
+            func(expr);
+            break;
+        case EXPR_ADD:
+        case EXPR_SUB:
+        case EXPR_MUL:
+        case EXPR_DIV:
+            infix = (struct infix_expr *)expr;
+            traverse_expr(infix->l, func);
+            traverse_expr(infix->r, func);
+            func(expr);
+            break;
+    }
+
 }
