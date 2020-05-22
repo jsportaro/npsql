@@ -20,7 +20,8 @@
             "ignoreFailures": true
           }
         ],
-        "miDebuggerPath": "/usr/bin/gdb"
+        "miDebuggerPath": "/usr/bin/gdb",
+        
       }
     ]
   }

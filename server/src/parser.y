@@ -1,79 +1,95 @@
+%define api.pure full
+%lex-param {void *scanner}
+%parse-param {void *scanner}{struct parsed_sql *parsed}
+
+%define parse.trace
+%define parse.error verbose
+
 %{
+#include <sql.h>
+#include <parser.gen.h>
+#include <lexer.gen.h>
+#include <vector.h>
+#include <common.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
 
-void yyerror(char *s, ...);
+
+void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 void emit(char *s, ...);
-int yylex();
-
 %}
 
-%union {
-    int int_val;
-    char *str_val;
+%code requires
+{
+#include <sql.h>
+#include <vector.h>
 }
+%define api.value.type union /* Generate YYSTYPE from these types:  */
+%token <long>           INTNUM     "integer"
+%token <const char *>   STRING     "string"
+%token <const char *>   IDENTIFIER "identifier"
+%token <const char *>   OPERATOR   "operator"
 
-
-%token <str_val> NAME
-%token <str_val> STRING
-%token <int_val> INTNUM
-
-%token AND
-%token AS
-%token CHAR
-%token CREATE
-%token EQUALITY
-%token FROM
-%token INDEX
-%token INT
-%token OR
 %token SELECT
-%token TABLE
-%token WHERE
+%token COMPARISON 
 
-%type <int_val> select_expr_list table_list
+%type <struct sql_stmt *> select_stmt
+%type <vector_type(struct expr *)> select_expr_list
+%type <struct expr *> select_expr
+%type <struct expr *> expr factor term
 
-%start npsql_statments
+%start stmt;
 
 %%
 
-npsql_statments: npsql_statement ';'
-    | npsql_statments npsql_statement ';'
-    | ';'
-    ;
+stmt: 
+    select_stmt                      { parsed->sql = $1; }     
+;
 
-npsql_statement: 
-    select_statement { emit("STATEMENT"); }
-    ;
-
-select_statement: 
-      SELECT select_expr_list  { emit("SELECTNODATA %d", $2); }
-    | SELECT select_expr_list  
-      FROM table_list          { emit("SELECT"); } ;
-    ;
+select_stmt: 
+    SELECT select_expr_list          { $$ = new_select($2); }
+;  
 
 select_expr_list: 
-      select_expr { $$ = 1; }
-    | select_expr_list ',' select_expr {$$ = $1 + 1; }
-    | '*' { emit("SELECTALL"); $$ = 1; }
-    ;
+    select_expr                      { $$ = new_expr_list($1);          }
+  | select_expr_list ',' select_expr { $$ = append_expr_list($1, $3);   }
+;
 
-table_list:
-      table_reference { $$ = 1; }
-    | table_list ',' table_reference {$$ = $1 + 1; }
-    ;
+select_expr:
+    expr         { $$ = $1; }
+;
 
-select_expr: expr;
+expr: 
+     factor
+   | expr '+' factor { $$ = new_infix_expr(EXPR_ADD, $1, $3); }
+   | expr '-' factor { $$ = new_infix_expr(EXPR_SUB, $1, $3); }
+;
 
-table_reference:
-      NAME { emit("TABLE %s", $1); free($1); }
+factor:
+     term
+   | factor '*' term { $$ = new_infix_expr(EXPR_MUL, $1, $3); }
+   | factor '/' term { $$ = new_infix_expr(EXPR_DIV, $1, $3); }
+;
 
-expr: NAME { emit("COLUMN %s", $1); free($1); }
-    ;
+term:
+     "identifier"  { $$ = new_term_expr(EXPR_IDENIFIER, $1); }
+   | "string"      { $$ = new_term_expr(EXPR_STRING,    $1); }
+   | "integer"     { $$ = new_term_expr(EXPR_INTEGER,   (const void *)(&$1)); }
+;
+
 
 %%
+
+void 
+yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg) 
+{
+  UNUSED(locp);
+  UNUSED(parsed);
+  
+	fprintf(stderr, "--> %s\n", msg);
+}
 
 void
 emit(char *s, ...)
@@ -86,15 +102,3 @@ emit(char *s, ...)
   printf("\n");
 }
 
-void
-yyerror(char *s, ...)
-{
-  extern int yylineno;
-
-  va_list ap;
-  va_start(ap, s);
-
-  fprintf(stderr, "%d: error: ", yylineno);
-  vfprintf(stderr, s, ap);
-  fprintf(stderr, "\n");
-}

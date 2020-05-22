@@ -22,7 +22,7 @@ void npsql_start(int argc, char *argv[])
     struct session_manager session_manager;
 
     fprintf(stdout, "Starting npsql\n");
-    
+
     query_engine_init(data_file, log_file, &query_engine);
     session_manager_init(&session_manager, &query_engine);
     server_start(LISTENING_PORT, &session_manager);

@@ -77,20 +77,20 @@ static void say_columns(struct session *session, struct query_results *results)
     UNUSED(session);
     UNUSED(results);
 
-    VECTOR_TYPE(uint8_t) column_bytes = NULL;
+    vector_type(uint8_t) column_bytes = NULL;
 
     // Header 
-    VECTOR_PUSH(column_bytes, (uint8_t)NQP_COLUMNDEFINITION);
-    VECTOR_PUSH(column_bytes, 0x00);
-    VECTOR_PUSH(column_bytes, 0x00);
+    vector_push(column_bytes, (uint8_t)NQP_COLUMNDEFINITION);
+    vector_push(column_bytes, 0x00);
+    vector_push(column_bytes, 0x00);
 
     // Payload
-    for (struct column *col = VECTOR_BEGIN(results->set.columns); col != VECTOR_END(results->set.columns); ++col) 
+    for (struct column *col = vector_begin(results->set.columns); col != vector_end(results->set.columns); ++col) 
     {
-        long start_size = VECTOR_SIZE(column_bytes);
+        long start_size = vector_size(column_bytes);
         uint16_t length = COLUMN_MIN_LENGTH + col->name.length;
 
-        VECTOR_GROW(column_bytes, length  + start_size);
+        vector_grow(column_bytes, length  + start_size);
 
         uint8_t *column_start = &column_bytes[start_size];
 
@@ -99,33 +99,33 @@ static void say_columns(struct session *session, struct query_results *results)
         htops((uint16_t)col->name.length, &column_start[3]);          //  Name Size (# bytes)
         memcpy(&column_start[5], col->name.bytes, col->name.length);  //  Name 
 
-        VECTOR_SET_SIZE(column_bytes, length + start_size);
+        vector_set_size(column_bytes, length + start_size);
     }
 
-    htops((uint16_t)VECTOR_SIZE(column_bytes) - HEADER_LENGTH, &column_bytes[1]);
-    send_buffer(session->network_handle, column_bytes, VECTOR_SIZE(column_bytes));
-    VECTOR_FREE(column_bytes);
+    htops((uint16_t)vector_size(column_bytes) - HEADER_LENGTH, &column_bytes[1]);
+    send_buffer(session->network_handle, column_bytes, vector_size(column_bytes));
+    vector_free(column_bytes);
     column_bytes = NULL;
 }
 
 static uint8_t * new_rowset_buffer()
 {
-    VECTOR_TYPE(uint8_t) rowset_bytes = NULL;
+    vector_type(uint8_t) rowset_bytes = NULL;
 
-    VECTOR_PUSH(rowset_bytes, (uint8_t)NQP_ROWSET);
-    VECTOR_PUSH(rowset_bytes, 0x00);
-    VECTOR_PUSH(rowset_bytes, 0x00);
-    VECTOR_GROW(rowset_bytes, MAX_MESSAGE_SIZE);
+    vector_push(rowset_bytes, (uint8_t)NQP_ROWSET);
+    vector_push(rowset_bytes, 0x00);
+    vector_push(rowset_bytes, 0x00);
+    vector_grow(rowset_bytes, MAX_MESSAGE_SIZE);
 
     return rowset_bytes;
 }
 
-static VECTOR_TYPE(uint8_t) say_rowset(struct session *session, VECTOR_TYPE(uint8_t) rowset_bytes)
+static vector_type(uint8_t) say_rowset(struct session *session, vector_type(uint8_t) rowset_bytes)
 {
-    htops((uint16_t)VECTOR_SIZE(rowset_bytes) - HEADER_LENGTH, &rowset_bytes[1]);
-    send_buffer(session->network_handle, rowset_bytes, VECTOR_SIZE(rowset_bytes));
+    htops((uint16_t)vector_size(rowset_bytes) - HEADER_LENGTH, &rowset_bytes[1]);
+    send_buffer(session->network_handle, rowset_bytes, vector_size(rowset_bytes));
 
-    VECTOR_FREE(rowset_bytes);
+    vector_free(rowset_bytes);
     return new_rowset_buffer();
 }
 
@@ -133,7 +133,7 @@ static void handle_query(struct session *session, size_t payload_size)
 {
     uint8_t *query = malloc(payload_size);
     struct query_results *results = NULL;
-    VECTOR_TYPE(uint8_t) rowset_bytes = NULL;
+    vector_type(uint8_t) rowset_bytes = NULL;
 
     receive_buffer(session->network_handle, query, payload_size);
     results = submit_query(session->manager->engine, query, payload_size);
@@ -168,17 +168,17 @@ static void handle_query(struct session *session, size_t payload_size)
 
             while (next_record(results))
             {
-                if (VECTOR_SIZE(rowset_bytes) + VECTOR_SIZE(results->current) > MAX_MESSAGE_SIZE)
+                if (vector_size(rowset_bytes) + vector_size(results->current) > MAX_MESSAGE_SIZE)
                 {
                     rowset_bytes = say_rowset(session, rowset_bytes);
                 }
 
-                uint8_t *row_start = &rowset_bytes[VECTOR_SIZE(rowset_bytes)];
-                memcpy(row_start, results->current, VECTOR_SIZE(results->current));
-                VECTOR_INCREASE_SIZE(rowset_bytes, VECTOR_SIZE(results->current));
+                uint8_t *row_start = &rowset_bytes[vector_size(rowset_bytes)];
+                memcpy(row_start, results->current, vector_size(results->current));
+                vector_increase_size(rowset_bytes, vector_size(results->current));
             }
 
-            if (VECTOR_SIZE(rowset_bytes) > 0)
+            if (vector_size(rowset_bytes) > 0)
             {
                 rowset_bytes = say_rowset(session, rowset_bytes);
             }
@@ -190,7 +190,7 @@ static void handle_query(struct session *session, size_t payload_size)
 cleanup:
     free_results(results);
     free(query);
-    VECTOR_FREE(rowset_bytes);
+    vector_free(rowset_bytes);
     fprintf(stdout, "Returning from query handler\n");
     return;
 }

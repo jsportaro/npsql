@@ -1,42 +1,33 @@
-%option noyywrap nodefault yylineno case-insensitive nounput noinput
-
+%option case-insensitive nounput noinput 
 %{
-
-#include <parser.h>
-#include <npsql.h>
-#include <stdarg.h>
-#include <string.h>
-
+#include <parser.gen.h>
+#include <stdio.h>
 void yyerror(char *s, ...);
-
-int old_state;
-
 %}
 
-%% 
+%option reentrant bison-bridge noyywrap
 
-AND    { return AND;    }
-AS     { return AS;     }
-CHAR   { return CHAR;   }
-CREATE { return CREATE; }
-FROM   { return FROM;   }
-INDEX  { return INDEX;  }
-INT    { return INT;    }
-OR     { return OR;     }
-SELECT { return SELECT; }
-TABLE  { return TABLE;  }
-WHERE  { return WHERE;  }
+id        [a-zA-Z][a-zA-Z_0-9]*
+int       [-+]?[0-9]+
+blank     [ \t\n]
+string    '(\\.|''|[^'\n])*'
+operators [-+&~|^/%*(),.;!]  
 
--?[0-9]+               { yylval.int_val = atoi(yytext); return INTNUM; }
-\"(\\.|\"\"|[^"\n])*\" { yylval.str_val = strdup(yytext); return STRING; } 
+%%
 
-[=+*/(),;] { return yytext[0]; }
+SELECT      { return SELECT; }
+ 
+{int}       { yylval->INTNUM = atol(yytext); return INTNUM; }
+ 
+{id}        { yylval->IDENTIFIER = yytext; return IDENTIFIER; }
+{string}    { yylval->STRING = yytext; return STRING; }
 
-"=" { return EQUALITY; }
+{operators} { return yytext[0]; }
+ 
+"="	        { yylval->OPERATOR = yytext; return COMPARISON; }
 
-[A-Za-z][A-Za-z0-9]* { yylval.str_val = strdup(yytext); return NAME; }
+{blank}     ;
 
-[ \t\n] /* ignore whitespaces */
-.       { yyerror("Parsing error '%c'", *yytext); }
+.           { fprintf(stdout, "lex mystery character '%c'\n", *yytext); }
 
 %%

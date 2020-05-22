@@ -1,8 +1,21 @@
 #include <parser.h>
-#include <lexer.h>
+#include <sql.h>
+
+#include <stdio.h>
+#include <string.h>
+
+void test_no_data_select()
+{
+    char *sql = "select VARNUM - 2 + 2 * 3 / 4";
+
+	size_t len = strlen(sql);
+
+    struct parsed_sql *result = parse_sql(sql, len);
+
+    fprintf(stdout, "Done\n");
+}
 
 int main(void)
-{
-    char *sql = "select one, two, three from tableone, tabletwo";
-    YY_BUFFER_STATE bp = yy_scan_bytes(sql, sizeof(sql));
+{   
+    test_no_data_select();
 }
