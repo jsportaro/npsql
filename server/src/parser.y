@@ -32,6 +32,9 @@ void emit(char *s, ...);
 %token <const char *>   IDENTIFIER "identifier"
 %token <const char *>   OPERATOR   "operator"
 
+%left '+' '-'
+%left '*' '/'
+
 %token SELECT
 %token FROM
 %token WHERE
@@ -44,7 +47,7 @@ void emit(char *s, ...);
 %type <vector_type(struct table_ref *)> table_references
 %type <struct table_ref *> table_reference
 %type <struct expr *> select_expr
-%type <struct expr *> expr factor term
+%type <struct expr *> expr
 %type <struct expr *> opt_where
 
 %start stmt_list;
@@ -88,24 +91,19 @@ opt_where:
     WHERE expr                       { $$ = $2; }
 ;
 
-expr: 
-    factor
-  | expr '+' factor                  { $$ = new_infix_expr(EXPR_ADD, $1, $3); }
-  | expr '-' factor                  { $$ = new_infix_expr(EXPR_SUB, $1, $3); }
-;
-
-factor:
-    term
-  | factor '*' term                  { $$ = new_infix_expr(EXPR_MUL, $1, $3); }
-  | factor '/' term                  { $$ = new_infix_expr(EXPR_DIV, $1, $3); }
-;
-
-term:
+expr:
     "identifier"                     { $$ = new_term_expr(EXPR_IDENIFIER, $1); }
   | "string"                         { $$ = new_term_expr(EXPR_STRING,    $1); }
   | "integer"                        { $$ = new_term_expr(EXPR_INTEGER,   (const void *)(&$1)); }
 ;
 
+expr: 
+     expr '+' expr        { $$ = new_infix_expr(EXPR_ADD, $1, $3); }
+   | expr '-' expr        { $$ = new_infix_expr(EXPR_SUB, $1, $3); }
+   | expr '*' expr        { $$ = new_infix_expr(EXPR_MUL, $1, $3); }
+   | expr '/' expr        { $$ = new_infix_expr(EXPR_DIV, $1, $3); }
+   | expr COMPARISON expr { $$ = new_infix_expr(EXPR_COMPARISON, $1, $3); }
+;
 
 %%
 

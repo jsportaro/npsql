@@ -39,7 +39,7 @@ new_select_data(
     select->expr_list = expr_list;
     select->table_refs = table_refs;
     select->where = where;
-    
+
     return (struct sql_stmt *)select;
 }
 
@@ -157,6 +157,8 @@ free_select(struct select * select)
         free_table_ref(select->table_refs[i]);
     }
 
+    free_expr(select->where);
+
     vector_free(select->expr_list);
     vector_free(select->table_refs);
 }
@@ -189,6 +191,7 @@ free_expr(struct expr *expr)
         case EXPR_SUB:
         case EXPR_MUL:
         case EXPR_DIV:
+        case EXPR_COMPARISON:
             infix = (struct infix_expr *)expr;
             free_expr(infix->l);
             free_expr(infix->r);

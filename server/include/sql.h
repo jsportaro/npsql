@@ -24,7 +24,8 @@ enum expr_type
     EXPR_ADD,
     EXPR_SUB,
     EXPR_MUL,
-    EXPR_DIV
+    EXPR_DIV,
+    EXPR_COMPARISON
 };
 
 struct expr
