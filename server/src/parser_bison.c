@@ -14,7 +14,7 @@ struct parsed_sql *parse_sql(char *sql, size_t length)
 	res = yyparse(sc, parsed);
 	yylex_destroy(sc);
 
-    UNUSED(res);
+    parsed->has_error = res == 0 ? false : true;
 
     return parsed;
 }

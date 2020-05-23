@@ -17,9 +17,29 @@ struct sql_stmt *new_select
     struct select *select = malloc(sizeof(struct select));
 
     select->expr_list = NULL;
+    select->table_refs = NULL;
     select->type = STMT_SELECT;
     select->expr_list = expr_list;
 
+    return (struct sql_stmt *)select;
+}
+
+struct sql_stmt *
+new_select_data(
+    vector_type(struct expr *) expr_list, 
+    vector_type(struct table_ref *) table_refs, 
+    struct expr *where)
+{
+     struct select *select = malloc(sizeof(struct select));
+
+    select->expr_list = NULL;
+    select->table_refs = NULL;
+    select->where = NULL;
+    select->type = STMT_SELECT;
+    select->expr_list = expr_list;
+    select->table_refs = table_refs;
+    select->where = where;
+    
     return (struct sql_stmt *)select;
 }
 
@@ -39,6 +59,27 @@ append_expr_list(vector_type(struct expr *) expr_list, struct expr *expr)
     vector_push(expr_list, expr);
 
     return expr_list;
+}
+
+struct table_ref * 
+new_table_ref(const char *name)
+{
+    struct table_ref * table_ref = malloc(sizeof(struct table_ref));
+
+    table_ref->table_name = malloc(strlen(name) + 1);
+    strcpy(table_ref->table_name, name);
+
+    return table_ref;
+}
+
+vector_type(struct table_ref *) 
+new_table_list(struct table_ref * table_ref)
+{
+    vector_type(struct table_ref *) table_ref_list = NULL;
+
+    vector_push(table_ref_list, table_ref);
+
+    return table_ref_list;
 }
 
 struct expr * 
@@ -64,7 +105,8 @@ new_term_expr(enum expr_type type, const void *v)
     return (struct expr * )expr;
 }
 
-struct expr * new_infix_expr(enum expr_type type, struct expr *l, struct expr *r)
+struct expr * 
+new_infix_expr(enum expr_type type, struct expr *l, struct expr *r)
 {
     struct infix_expr *expr = malloc(sizeof(struct infix_expr));
 
@@ -79,10 +121,12 @@ struct expr * new_infix_expr(enum expr_type type, struct expr *l, struct expr *r
 }
 
 
-void free_select(struct select * select);
+void free_select(struct select *select);
+void free_table_ref(struct table_ref *table_ref);
 void free_expr(struct expr *expr);
 
-void free_stmts(struct parsed_sql * parsed)
+void 
+free_stmts(struct parsed_sql * parsed)
 {
     for (size_t i = 0; i < vector_size(parsed->stmts); i++)
     {
@@ -100,17 +144,32 @@ void free_stmts(struct parsed_sql * parsed)
     free(parsed);
 }
 
-void free_select(struct select * select)
+void 
+free_select(struct select * select)
 {
     for (size_t i = 0; i < vector_size(select->expr_list); i++)
     {
         free_expr(select->expr_list[i]);
     }
 
+    for (size_t i = 0; i < vector_size(select->table_refs); i++)
+    {
+        free_table_ref(select->table_refs[i]);
+    }
+
     vector_free(select->expr_list);
+    vector_free(select->table_refs);
 }
 
-void free_expr(struct expr *expr)
+void 
+free_table_ref(struct table_ref *table_ref)
+{
+    free(table_ref->table_name);
+    free(table_ref);
+}
+
+void 
+free_expr(struct expr *expr)
 {
     struct infix_expr *infix = NULL;
     struct term_expr *term = NULL;
@@ -136,5 +195,4 @@ void free_expr(struct expr *expr)
             free(expr);
             break;
     }
-
 }
