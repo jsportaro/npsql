@@ -16,6 +16,7 @@ struct sql_stmt *new_select
 {
     struct select *select = malloc(sizeof(struct select));
 
+    select->expr_list = NULL;
     select->type = STMT_SELECT;
     select->expr_list = expr_list;
 
@@ -44,7 +45,10 @@ struct expr *
 new_term_expr(enum expr_type type, const void *v)
 {
     struct term_expr *expr = (struct term_expr *) malloc(sizeof(struct term_expr));
+    
     expr->type = type;
+    expr->value.string = NULL;
+
     switch (type) {
         case EXPR_STRING:
         case EXPR_IDENIFIER:
@@ -64,6 +68,9 @@ struct expr * new_infix_expr(enum expr_type type, struct expr *l, struct expr *r
 {
     struct infix_expr *expr = malloc(sizeof(struct infix_expr));
 
+    expr->l = NULL;
+    expr->r = NULL;
+
     expr->type = type;
     expr->l = l;
     expr->r = r;
@@ -72,79 +79,61 @@ struct expr * new_infix_expr(enum expr_type type, struct expr *l, struct expr *r
 }
 
 
+void free_select(struct select * select);
+void free_expr(struct expr *expr);
 
-void traverse_select(struct select * select, void (*func)(void *object));
-void traverse_expr(struct expr *expr, void (*func)(void *object));
-
-static void do_nothing(void *object)
+void free_stmts(struct parsed_sql * parsed)
 {
-    UNUSED(object);
-}
-
-void traverse_stmts(struct parsed_sql * parsed, void (*func)(void *object))
-{
-    if (func == NULL)
-    {
-        func = &do_nothing;
-    }
-
     for (size_t i = 0; i < vector_size(parsed->stmts); i++)
     {
         switch(parsed->stmts[i]->type)
         {
             case STMT_SELECT:
-                traverse_select((struct select *)parsed->stmts[i], func);
+                free_select((struct select *)parsed->stmts[i]);
                 break;
         }
+
+        free(parsed->stmts[i]);
     }
-}
 
-static void delete(void *object)
-{
-    free(object);
-}
-
-void delete_stmts(struct parsed_sql * parsed)
-{
-    traverse_stmts(parsed, &delete);
-
+    vector_free(parsed->stmts);
     free(parsed);
 }
 
-void traverse_select(struct select * select, void (*func)(void *object))
+void free_select(struct select * select)
 {
-    fprintf(stdout, "I have %d projections\n", (int)vector_size(select->expr_list));
-
     for (size_t i = 0; i < vector_size(select->expr_list); i++)
     {
-        traverse_expr(select->expr_list[i], func);
-        
+        free_expr(select->expr_list[i]);
     }
+
+    vector_free(select->expr_list);
 }
 
-void traverse_expr(struct expr *expr, void (*func)(void *object))
+void free_expr(struct expr *expr)
 {
     struct infix_expr *infix = NULL;
+    struct term_expr *term = NULL;
 
     switch(expr->type)
     {
         case EXPR_INTEGER:
-            func(expr);
-            break;
-        case EXPR_STRING:
-            func(expr);
+            free(expr);
             break;
         case EXPR_IDENIFIER:
-            func(expr);
+        case EXPR_STRING:
+            term = (struct term_expr *)expr;
+            free(term->value.string);
+            free(term);
             break;
         case EXPR_ADD:
         case EXPR_SUB:
         case EXPR_MUL:
         case EXPR_DIV:
             infix = (struct infix_expr *)expr;
-            traverse_expr(infix->l, func);
-            traverse_expr(infix->r, func);
-            func(expr);
+            free_expr(infix->l);
+            free_expr(infix->r);
+            free(expr);
             break;
     }
 

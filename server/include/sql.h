@@ -64,7 +64,6 @@ struct sql_stmts
 
 struct parsed_sql
 {
-    char r;
     vector_type(struct sql_stmt *) stmts;
 };
 
@@ -76,7 +75,6 @@ vector_type(struct expr *) append_expr_list(vector_type(struct expr *) expr_list
 struct expr * new_term_expr(enum expr_type type, const void *v);
 struct expr * new_infix_expr(enum expr_type type, struct expr *l, struct expr *r);
 
-void delete_stmts(struct parsed_sql * parsed);
-void traverse_stmts(struct parsed_sql * parsed, void (*func)(void *object));
+void free_stmts(struct parsed_sql * parsed);
 
 #endif
