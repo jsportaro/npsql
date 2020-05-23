@@ -1,8 +1,6 @@
 #ifndef __VECTOR_H__
 #define __VECTOR_H__
 
-#include <common.h>
-
 #include <assert.h> 
 #include <stddef.h>
 #include <stdlib.h>
@@ -10,23 +8,23 @@
 // Taken from https://github.com/eteran/c-vector
 // I just updated the formatting
 
-#define VECTOR_TYPE(type) type *
+#define vector_type(type) type *
      
-#define VECTOR_SET_CAPACITY(vec, size)                                         \
+#define vector_set_capacity(vec, size)                                         \
     do {                                                                       \
         if (vec) {                                                             \
             ((size_t *)(vec))[-1] = (size);                                    \
         }                                                                      \
     } while (0)     
      
-#define VECTOR_SET_SIZE(vec, size)                                             \
+#define vector_set_size(vec, size)                                             \
     do {                                                                       \
         if (vec) {                                                             \
             ((size_t *)(vec))[-2] = (size);                                    \
         }                                                                      \
     } while (0)     
 
-#define VECTOR_INCREASE_SIZE(vec, size)                                        \
+#define vector_increase_size(vec, size)                                        \
     do {                                                                       \
         if (vec) {                                                             \
             size_t __csize = ((size_t *)(vec))[-2];                            \
@@ -34,22 +32,22 @@
         }                                                                      \
     } while (0)     
      
-#define VECTOR_CAPACITY(vec)                                                   \
+#define vector_capacity(vec)                                                   \
     ((vec) ? ((size_t *)(vec))[-1] : (size_t)0)     
      
-#define VECTOR_SIZE(vec)                                                       \
+#define vector_size(vec)                                                       \
     ((vec) ? ((size_t *)(vec))[-2] : (size_t)0)     
      
-#define VECTOR_EMPTY(vec)                                                      \
-	(VECTOR_SIZE(vec) == 0)     
+#define vector_empty(vec)                                                      \
+	(vector_size(vec) == 0)     
     
-#define VECTOR_BEGIN(vec)                                                      \
+#define vector_begin(vec)                                                      \
 	(vec)
 
-#define VECTOR_END(vec)                                                        \
-	((vec) ? &((vec)[VECTOR_SIZE(vec)]) : NULL)
+#define vector_end(vec)                                                        \
+	((vec) ? &((vec)[vector_size(vec)]) : NULL)
 
-#define VECTOR_GROW(vec, count)                                                \
+#define vector_grow(vec, count)                                                \
     do {                                                                       \
         const size_t __new_size =                                              \
             (count) * sizeof(*(vec)) + (sizeof(size_t) * 2);                   \
@@ -57,18 +55,18 @@
             size_t *__new_vector = malloc(__new_size);                         \
             assert(__new_vector);                                              \
             (vec) = (void *)(&__new_vector[2]);                                \
-            VECTOR_SET_CAPACITY((vec), (count));                               \
-            VECTOR_SET_SIZE((vec), (0));                                       \
+            vector_set_capacity((vec), (count));                               \
+            vector_set_size((vec), (0));                                       \
         } else {                                                               \
             size_t *__true_beginning = &((size_t *)(vec))[-2];                 \
             size_t *__new_vector = realloc(__true_beginning, __new_size);      \
             assert(__new_vector);                                              \
             (vec) = (void *)(&__new_vector[2]);                                \
-            VECTOR_SET_CAPACITY((vec), (count));                               \
+            vector_set_capacity((vec), (count));                               \
         }                                                                      \
     } while (0)     
      
-#define VECTOR_FREE(vec)                                                       \
+#define vector_free(vec)                                                       \
     do {                                                                       \
         if (vec) {                                                             \
             size_t *true_beginning = &((size_t *)(vec))[-2];                   \
@@ -76,14 +74,14 @@
         }                                                                      \
     } while (0)     
      
-#define VECTOR_PUSH(vec, value)                                                \
+#define vector_push(vec, value)                                                \
 	do {                                                                       \
-		size_t __capacity = VECTOR_CAPACITY(vec);                              \
-		if (__capacity <= VECTOR_SIZE(vec)) {                                  \
-			VECTOR_GROW((vec), !__capacity ? __capacity + 1 : __capacity * 2); \
+		size_t __capacity = vector_capacity(vec);                              \
+		if (__capacity <= vector_size(vec)) {                                  \
+			vector_grow((vec), !__capacity ? __capacity + 1 : __capacity * 2); \
 		}                                                                      \
-		vec[VECTOR_SIZE(vec)] = (value);                                       \
-		VECTOR_SET_SIZE((vec), VECTOR_SIZE(vec) + 1);                          \
+		vec[vector_size(vec)] = (value);                                       \
+		vector_set_size((vec), vector_size(vec) + 1);                          \
 	} while (0)
 
 #endif

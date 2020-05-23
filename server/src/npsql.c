@@ -1,6 +1,8 @@
 #include <common.h>
 #include <npsql.h>
 #include <networking.h>
+#include <parser.h>
+#include <sql.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -31,7 +33,7 @@ struct query_results * submit_query(struct query_engine *query_engine, uint8_t *
 
     for (int i = 0; i < 14; i++)
     {
-        VECTOR_PUSH(results->current, row[i]);
+        vector_push(results->current, row[i]);
     }
 
     UNUSED(query_engine);
@@ -60,7 +62,7 @@ bool get_next_set(struct query_results *results)
     column.size = 10;
     memcpy(column.name.bytes, "name", 4);
     results->set.columns = NULL;
-    VECTOR_PUSH(results->set.columns, column);
+    vector_push(results->set.columns, column);
 
     column.name.bytes = malloc(3);
     column.name.length = 3;
@@ -68,7 +70,7 @@ bool get_next_set(struct query_results *results)
     column.size = 4;
     memcpy(column.name.bytes, "age", 3);
 
-    VECTOR_PUSH(results->set.columns, column);
+    vector_push(results->set.columns, column);
 
     results->sets_to_return--;
 
@@ -77,12 +79,12 @@ bool get_next_set(struct query_results *results)
 
 void free_results(struct query_results *results)
 {
-    for (struct column *col = VECTOR_BEGIN(results->set.columns); col != VECTOR_END(results->set.columns); ++col) 
+    for (struct column *col = vector_begin(results->set.columns); col != vector_end(results->set.columns); ++col) 
     {
         free(col->name.bytes);
     }
 
-    VECTOR_FREE(results->set.columns);
+    vector_free(results->set.columns);
     free(results);
 }
 

@@ -35,7 +35,7 @@ struct result_set
     struct byte_buffer message;
 
     bool has_rows;
-    VECTOR_TYPE(struct column) columns;
+    vector_type(struct column) columns;
 };
 
 struct query_results
@@ -44,7 +44,7 @@ struct query_results
     int rows_to_return;
 
     struct result_set set;
-    VECTOR_TYPE(uint8_t) current;
+    vector_type(uint8_t) current;
 
 
     bool parse_error;
@@ -57,6 +57,6 @@ struct query_results * submit_query(struct query_engine *query_engine, uint8_t *
 bool get_next_set(struct query_results *results);
 bool next_record(struct query_results *results);
 void free_results(struct query_results *results);
-VECTOR_TYPE(uint8_t) get_row_bytes(struct query_results *results);
+vector_type(uint8_t) get_row_bytes(struct query_results *results);
 
 #endif
