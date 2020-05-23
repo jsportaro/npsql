@@ -26,7 +26,7 @@ struct query_results * submit_query(struct query_engine *query_engine, uint8_t *
     results->parse_message.length = 0;
 
     results->sets_to_return = 1;
-    results->rows_to_return = 103;
+    results->rows_to_return = 104;
     results->current = NULL;
     results->set.execution_error = false;
     uint8_t row[] = { 0x6A, 0x6F, 0x73, 0x65, 0x70, 0x68, 0x20, 0x20, 0x20, 0x20, 0x20, 0x00, 0x00, 0x00 };

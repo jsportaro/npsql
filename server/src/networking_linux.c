@@ -8,6 +8,11 @@
 #include <unistd.h>
 #include <pthread.h>
 
+struct open_connection
+{
+    int socked_fd;
+};
+
 void server_start(uint16_t port, struct session_manager *session_manager)
 {
     fprintf(stdout, "Starting server... ");
@@ -46,11 +51,7 @@ void server_start(uint16_t port, struct session_manager *session_manager)
 
     while ((s = accept(socket_desc, (struct sockaddr *)&client, (socklen_t *)&sizeof_sockaddr_in)))
     {
-        int *client_socket = malloc(sizeof(int));
-
-        *client_socket = s;
-
-        handle_connection(session_manager, (void*)client_socket);
+        handle_connection(session_manager, (SOCKET)s);
     }
 
     return;
@@ -61,25 +62,17 @@ error:
     return;
 }
 
-void close_connection(void *network_handle)
+void close_connection(SOCKET socket)
 {
-    int client_socket = *(int *)network_handle;
-
-    free(network_handle);
-
-    close(client_socket);
+    close(socket);
 }
 
-void send_buffer(void *network_handle, uint8_t *buffer, size_t size)
+void send_buffer(SOCKET socket, uint8_t *buffer, size_t size)
 {
-    int client_socket = *(int *)network_handle;
-
-    write(client_socket, buffer, size);
+    write(socket, buffer, size);
 }
 
-void receive_buffer(void *network_handle, uint8_t *buffer, size_t size)
+void receive_buffer(SOCKET socket, uint8_t *buffer, size_t size)
 {
-    int client_socket = *(int *)network_handle;
-    
-    recv(client_socket, buffer, size, 0);
+    recv(socket, buffer, size, 0);
 }

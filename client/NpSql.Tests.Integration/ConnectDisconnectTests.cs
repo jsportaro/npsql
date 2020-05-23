@@ -7,11 +7,19 @@ namespace NpSql.Tests.Integration
 {
     public class ConnectDisconnectTests
     {
+        [Fact]
+        public void Attempt_Happy_Path()
+        {
+            using (var connection = new NpSqlConnection("Host=localhost;Port=15151"))
+            {
+                connection.Open();
+            }
+        }
 
         [Fact]
         public void Attempt_To_Connect_Past_Session_Limit()
         {
-            for (int loop = 0; loop < 10000; loop++)
+            for (int loop = 0; loop < 1000; loop++)
             {
                 var connection1 = new NpSqlConnection("Host=localhost;Port=15151");
 

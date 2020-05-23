@@ -37,9 +37,9 @@ endif()
 
 set (COMMON_SOURCE
     common.c
+    nqp.c
     npsql.c
     sql.c 
-    networking.c
     ${PARSER_SOURCE}
     )
 

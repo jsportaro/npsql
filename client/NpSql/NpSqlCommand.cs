@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NpSql
 {
-    class NpSqlCommand : IDbCommand
+    public class NpSqlCommand : IDbCommand
     {
         private bool disposed = false;
         private NpSqlConnection connection;
