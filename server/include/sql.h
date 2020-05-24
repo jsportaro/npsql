@@ -74,7 +74,9 @@ struct sql_stmts
 
 struct parsed_sql
 {
-    bool has_error;
+    vector_type(char) error_msg;
+    bool error;
+    
     vector_type(struct sql_stmt *) stmts;
 };
 

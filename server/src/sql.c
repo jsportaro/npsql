@@ -18,7 +18,9 @@ struct sql_stmt *new_select
 
     select->expr_list = NULL;
     select->table_refs = NULL;
+    select->where = NULL;
     select->type = STMT_SELECT;
+
     select->expr_list = expr_list;
 
     return (struct sql_stmt *)select;
@@ -36,6 +38,7 @@ new_select_data(
     select->table_refs = NULL;
     select->where = NULL;
     select->type = STMT_SELECT;
+
     select->expr_list = expr_list;
     select->table_refs = table_refs;
     select->where = where;
@@ -65,6 +68,8 @@ struct table_ref *
 new_table_ref(const char *name)
 {
     struct table_ref * table_ref = malloc(sizeof(struct table_ref));
+
+    table_ref->table_name = NULL;
 
     table_ref->table_name = malloc(strlen(name) + 1);
     strcpy(table_ref->table_name, name);
@@ -141,6 +146,11 @@ free_stmts(struct parsed_sql * parsed)
     }
 
     vector_free(parsed->stmts);
+    vector_free(parsed->error_msg);
+
+    parsed->stmts = NULL;
+    parsed->error_msg = NULL;
+
     free(parsed);
 }
 
@@ -157,10 +167,16 @@ free_select(struct select * select)
         free_table_ref(select->table_refs[i]);
     }
 
-    free_expr(select->where);
-
+    if (select->where != NULL)
+    {
+        free_expr(select->where);
+    }
     vector_free(select->expr_list);
     vector_free(select->table_refs);
+
+    select->expr_list = NULL;
+    select->table_refs = NULL;
+    select->where = NULL;
 }
 
 void 
