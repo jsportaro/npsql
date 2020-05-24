@@ -3,6 +3,7 @@
 
 #include <vector.h>
 
+#include <stdbool.h>
 #include <stdint.h>
 
 enum stmt_type
@@ -23,7 +24,8 @@ enum expr_type
     EXPR_ADD,
     EXPR_SUB,
     EXPR_MUL,
-    EXPR_DIV
+    EXPR_DIV,
+    EXPR_COMPARISON
 };
 
 struct expr
@@ -50,11 +52,19 @@ struct term_expr
     } value;
 };
 
+struct table_ref
+{
+    char *table_name;
+};
+
 struct select
 {
     enum stmt_type type;
 
     vector_type(struct expr *) expr_list;
+    vector_type(struct table_ref *) table_refs;
+
+    struct expr *where;
 };
 
 struct sql_stmts
@@ -64,19 +74,28 @@ struct sql_stmts
 
 struct parsed_sql
 {
-    char r;
+    bool has_error;
     vector_type(struct sql_stmt *) stmts;
 };
 
 void append_stmt(vector_type(struct sql_stmt *) stmt_list, struct sql_stmt * stmt);
+
+struct sql_stmt *new_select_data(
+    vector_type(struct expr *) expr_list, 
+    vector_type(struct table_ref *) table_refs, 
+    struct expr *where);
+
 struct sql_stmt *new_select(vector_type(struct expr *) expr_list);
+
 vector_type(struct expr *) new_expr_list(struct expr *expr);
 vector_type(struct expr *) append_expr_list(vector_type(struct expr *) expr_list, struct expr *expr);
+
+vector_type(struct table_ref *) new_table_list(struct table_ref * table_ref);
+struct table_ref * new_table_ref(const char *name);
 
 struct expr * new_term_expr(enum expr_type type, const void *v);
 struct expr * new_infix_expr(enum expr_type type, struct expr *l, struct expr *r);
 
-void delete_stmts(struct parsed_sql * parsed);
-void traverse_stmts(struct parsed_sql * parsed, void (*func)(void *object));
+void free_stmts(struct parsed_sql * parsed);
 
 #endif
