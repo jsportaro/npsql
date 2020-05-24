@@ -1,5 +1,6 @@
 ﻿using NpSql;
 using System;
+using System.Text;
 
 namespace NpSql_Cli
 {
@@ -15,10 +16,13 @@ namespace NpSql_Cli
             var connectionString = string.Empty;
             var defaultPort = 15151;
             NpSqlConnection connection = null;
-            
+
+            var prompt =  "npsql > ";
+            var qprompt = "      > ";
+
             while (!exit)
             {
-                Console.Write("npsql > ");
+                Console.Write(prompt);
 
                 var sql = Console.ReadLine();
                 var commandParts = sql.Split(commandSplitChar);
@@ -46,10 +50,37 @@ namespace NpSql_Cli
                         try
                         {
                             connection.Open();
+                            hasConnection = true;
                         }
                         catch(NpSqlException e)
                         {
                             Console.WriteLine(e.Message);
+                        }
+                        break;
+                    case "disconnect":
+                        connection.Dispose();
+                        connection = null;
+                        break;
+                    case "query":
+                        if (!hasConnection)
+                        {
+                            Console.WriteLine("You need to connect first");
+                        }
+                        else
+                        {
+                            StringBuilder sb = new StringBuilder();
+                            Console.Write(qprompt);
+                            var entry = Console.ReadLine();
+
+                            while (entry != "!s")
+                            {
+                                sb.Append(entry);
+
+                                Console.Write(qprompt);
+                                entry = Console.ReadLine();
+                            }
+
+                            IssueQuery(sb.ToString(), connection);
                         }
                         break;
                     default:
@@ -59,23 +90,39 @@ namespace NpSql_Cli
                         }
                         else
                         {
-                            IssueQuery(sql);
+                            IssueQuery(sql, connection);
                         }
                         // Assume its sql and see what a happens
                         break;
                 }
+            }
 
-            
-                if (connection != null)
-                {
-                    connection.Dispose();
-                    connection = null;
-                }
+
+            if (connection != null)
+            {
+                connection.Dispose();
+                connection = null;
             }
         }
 
-        private static void IssueQuery(string sql)
+        private static void IssueQuery(string sql, NpSqlConnection conn)
         {
+            try
+            {
+                using (var command = new NpSqlCommand(conn))
+                {
+                    command.CommandText = sql;
+
+                    using (var reader = command.ExecuteReader())
+                    {
+
+                    }
+                }
+            }
+            catch (NpSqlException e)
+            {
+                Console.WriteLine($"Error: {e.Message}");
+            }
         }
     }
 }
