@@ -69,10 +69,14 @@ void close_connection(SOCKET socket)
 
 void send_buffer(SOCKET socket, uint8_t *buffer, size_t size)
 {
-    write(socket, buffer, size);
+    size_t c = write(socket, buffer, size);
+
+    UNUSED(c);
 }
 
 void receive_buffer(SOCKET socket, uint8_t *buffer, size_t size)
 {
-    recv(socket, buffer, size, 0);
+    size_t c = recv(socket, buffer, size, 0);
+
+    UNUSED(c);
 }
