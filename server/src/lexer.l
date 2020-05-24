@@ -16,6 +16,10 @@ operators [-+&~|^/%*(),.;!]
 %%
 
 SELECT      { return SELECT; }
+FROM        { return FROM;   }
+WHERE       { return WHERE;  }
+AND         { return AND;    }
+OR          { return OR;     }
  
 {int}       { yylval->INTNUM = atol(yytext); return INTNUM; }
  
