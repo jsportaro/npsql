@@ -3,7 +3,11 @@
 
 #include <common.h>
 #include <vector.h>
+#include <parser.h>
+#include <sql.h>
 
+#include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 
 #define DB_OK 1
@@ -46,6 +50,7 @@ struct query_results
     struct result_set set;
     vector_type(uint8_t) current;
 
+    
 
     bool parse_error;
     struct byte_buffer parse_message;

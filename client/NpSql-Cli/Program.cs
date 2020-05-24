@@ -1,15 +1,17 @@
 ﻿using System;
+using NpSql;
 
 namespace NpSql_Cli
 {
     class Program
     {
+        static NpSqlConnection connection = default(NpSqlConnection);
         static void Main(string[] args)
         {
             var commandSplitChar = new char []{ ' ' };
             var exit = false;
             var hasConnection = false;
-
+            
             while (!exit)
             {
                 Console.Write("npsql > ");
@@ -22,10 +24,15 @@ namespace NpSql_Cli
                     case "quit":
                         exit = true;
                         break;
+                    case "connect":
+                        var serverName = "localhost";
+                        connection = new NpSqlConnection($"Host={serverName};Port=15151");
+                        connection.Open();
+                        break;
                     default:
                         if (!hasConnection)
                         {
-
+      
                         }
                         else
                         {
@@ -40,7 +47,11 @@ namespace NpSql_Cli
 
         private static void IssueQuery(string sql)
         {
-            throw new NotImplementedException();
+            using (var command = new NpSqlCommand(connection))
+            {
+                command.CommandText = "select * from test_table_name where name = 'heather'";
+                var reader = command.ExecuteReader();
+            }
         }
     }
 }

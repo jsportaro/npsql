@@ -5,5 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>NpSql_Cli</RootNamespace>
   </PropertyGroup>
-
+  <ItemGroup>
+    <ProjectReference Include="..\NpSql\NpSql.csproj" />
+  </ItemGroup>
 </Project>
