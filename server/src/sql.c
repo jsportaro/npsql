@@ -16,8 +16,32 @@ struct sql_stmt *new_select
 {
     struct select *select = malloc(sizeof(struct select));
 
+    select->expr_list = NULL;
+    select->table_refs = NULL;
+    select->where = NULL;
     select->type = STMT_SELECT;
+
     select->expr_list = expr_list;
+
+    return (struct sql_stmt *)select;
+}
+
+struct sql_stmt *
+new_select_data(
+    vector_type(struct expr *) expr_list, 
+    vector_type(struct table_ref *) table_refs, 
+    struct expr *where)
+{
+     struct select *select = malloc(sizeof(struct select));
+
+    select->expr_list = NULL;
+    select->table_refs = NULL;
+    select->where = NULL;
+    select->type = STMT_SELECT;
+
+    select->expr_list = expr_list;
+    select->table_refs = table_refs;
+    select->where = where;
 
     return (struct sql_stmt *)select;
 }
@@ -40,11 +64,37 @@ append_expr_list(vector_type(struct expr *) expr_list, struct expr *expr)
     return expr_list;
 }
 
+struct table_ref * 
+new_table_ref(const char *name)
+{
+    struct table_ref * table_ref = malloc(sizeof(struct table_ref));
+
+    table_ref->table_name = NULL;
+
+    table_ref->table_name = malloc(strlen(name) + 1);
+    strcpy(table_ref->table_name, name);
+
+    return table_ref;
+}
+
+vector_type(struct table_ref *) 
+new_table_list(struct table_ref * table_ref)
+{
+    vector_type(struct table_ref *) table_ref_list = NULL;
+
+    vector_push(table_ref_list, table_ref);
+
+    return table_ref_list;
+}
+
 struct expr * 
 new_term_expr(enum expr_type type, const void *v)
 {
     struct term_expr *expr = (struct term_expr *) malloc(sizeof(struct term_expr));
+    
     expr->type = type;
+    expr->value.string = NULL;
+
     switch (type) {
         case EXPR_STRING:
         case EXPR_IDENIFIER:
@@ -60,9 +110,13 @@ new_term_expr(enum expr_type type, const void *v)
     return (struct expr * )expr;
 }
 
-struct expr * new_infix_expr(enum expr_type type, struct expr *l, struct expr *r)
+struct expr * 
+new_infix_expr(enum expr_type type, struct expr *l, struct expr *r)
 {
     struct infix_expr *expr = malloc(sizeof(struct infix_expr));
+
+    expr->l = NULL;
+    expr->r = NULL;
 
     expr->type = type;
     expr->l = l;
@@ -72,80 +126,92 @@ struct expr * new_infix_expr(enum expr_type type, struct expr *l, struct expr *r
 }
 
 
+void free_select(struct select *select);
+void free_table_ref(struct table_ref *table_ref);
+void free_expr(struct expr *expr);
 
-void traverse_select(struct select * select, void (*func)(void *object));
-void traverse_expr(struct expr *expr, void (*func)(void *object));
-
-static void do_nothing(void *object)
+void 
+free_stmts(struct parsed_sql * parsed)
 {
-    UNUSED(object);
-}
-
-void traverse_stmts(struct parsed_sql * parsed, void (*func)(void *object))
-{
-    if (func == NULL)
-    {
-        func = &do_nothing;
-    }
-
     for (size_t i = 0; i < vector_size(parsed->stmts); i++)
     {
         switch(parsed->stmts[i]->type)
         {
             case STMT_SELECT:
-                traverse_select((struct select *)parsed->stmts[i], func);
+                free_select((struct select *)parsed->stmts[i]);
                 break;
         }
+
+        free(parsed->stmts[i]);
     }
-}
 
-static void delete(void *object)
-{
-    free(object);
-}
+    vector_free(parsed->stmts);
+    vector_free(parsed->error_msg);
 
-void delete_stmts(struct parsed_sql * parsed)
-{
-    traverse_stmts(parsed, &delete);
+    parsed->stmts = NULL;
+    parsed->error_msg = NULL;
 
     free(parsed);
 }
 
-void traverse_select(struct select * select, void (*func)(void *object))
+void 
+free_select(struct select * select)
 {
-    fprintf(stdout, "I have %d projections\n", (int)vector_size(select->expr_list));
-
     for (size_t i = 0; i < vector_size(select->expr_list); i++)
     {
-        traverse_expr(select->expr_list[i], func);
-        
+        free_expr(select->expr_list[i]);
     }
+
+    for (size_t i = 0; i < vector_size(select->table_refs); i++)
+    {
+        free_table_ref(select->table_refs[i]);
+    }
+
+    if (select->where != NULL)
+    {
+        free_expr(select->where);
+    }
+    vector_free(select->expr_list);
+    vector_free(select->table_refs);
+
+    select->expr_list = NULL;
+    select->table_refs = NULL;
+    select->where = NULL;
 }
 
-void traverse_expr(struct expr *expr, void (*func)(void *object))
+void 
+free_table_ref(struct table_ref *table_ref)
+{
+    free(table_ref->table_name);
+    free(table_ref);
+}
+
+void 
+free_expr(struct expr *expr)
 {
     struct infix_expr *infix = NULL;
+    struct term_expr *term = NULL;
 
     switch(expr->type)
     {
         case EXPR_INTEGER:
-            func(expr);
-            break;
-        case EXPR_STRING:
-            func(expr);
+            free(expr);
             break;
         case EXPR_IDENIFIER:
-            func(expr);
+        case EXPR_STRING:
+            term = (struct term_expr *)expr;
+            free(term->value.string);
+            free(term);
             break;
         case EXPR_ADD:
         case EXPR_SUB:
         case EXPR_MUL:
         case EXPR_DIV:
+        case EXPR_COMPARISON:
             infix = (struct infix_expr *)expr;
-            traverse_expr(infix->l, func);
-            traverse_expr(infix->r, func);
-            func(expr);
+            free_expr(infix->l);
+            free_expr(infix->r);
+            free(expr);
             break;
     }
-
 }

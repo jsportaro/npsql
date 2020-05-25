@@ -32,13 +32,23 @@ void emit(char *s, ...);
 %token <const char *>   IDENTIFIER "identifier"
 %token <const char *>   OPERATOR   "operator"
 
+%left '+' '-'
+%left '*' '/'
+
 %token SELECT
+%token FROM
+%token WHERE
+%token AND
+%token OR
 %token COMPARISON 
 
 %type <struct sql_stmt *> stmt select_stmt
 %type <vector_type(struct expr *)> select_expr_list
+%type <vector_type(struct table_ref *)> table_references
+%type <struct table_ref *> table_reference
 %type <struct expr *> select_expr
-%type <struct expr *> expr factor term
+%type <struct expr *> expr
+%type <struct expr *> opt_where
 
 %start stmt_list;
 
@@ -55,6 +65,9 @@ stmt:
 
 select_stmt: 
     SELECT select_expr_list          { $$ = new_select($2); }
+  | SELECT select_expr_list
+    FROM table_references            
+    opt_where                        { $$ = new_select_data($2, $4, $5); }
 ;  
 
 select_expr_list: 
@@ -63,27 +76,35 @@ select_expr_list:
 ;
 
 select_expr:
-    expr         { $$ = $1; }
+    expr                             { $$ = $1; }
+;
+
+table_references:
+    table_reference                  { $$ = new_table_list($1); }
+;
+
+table_reference:
+    "identifier"                     { $$ = new_table_ref($1); }
+;
+
+opt_where:
+                                     { $$= NULL; }
+  | WHERE expr                       { $$ = $2;  }
+;
+
+expr:
+    "identifier"                     { $$ = new_term_expr(EXPR_IDENIFIER, $1); }
+  | "string"                         { $$ = new_term_expr(EXPR_STRING,    $1); }
+  | "integer"                        { $$ = new_term_expr(EXPR_INTEGER,   (const void *)(&$1)); }
 ;
 
 expr: 
-     factor
-   | expr '+' factor { $$ = new_infix_expr(EXPR_ADD, $1, $3); }
-   | expr '-' factor { $$ = new_infix_expr(EXPR_SUB, $1, $3); }
+    expr '+' expr        { $$ = new_infix_expr(EXPR_ADD, $1, $3); }
+  | expr '-' expr        { $$ = new_infix_expr(EXPR_SUB, $1, $3); }
+  | expr '*' expr        { $$ = new_infix_expr(EXPR_MUL, $1, $3); }
+  | expr '/' expr        { $$ = new_infix_expr(EXPR_DIV, $1, $3); }
+  | expr COMPARISON expr { $$ = new_infix_expr(EXPR_COMPARISON, $1, $3); }
 ;
-
-factor:
-     term
-   | factor '*' term { $$ = new_infix_expr(EXPR_MUL, $1, $3); }
-   | factor '/' term { $$ = new_infix_expr(EXPR_DIV, $1, $3); }
-;
-
-term:
-     "identifier"  { $$ = new_term_expr(EXPR_IDENIFIER, $1); }
-   | "string"      { $$ = new_term_expr(EXPR_STRING,    $1); }
-   | "integer"     { $$ = new_term_expr(EXPR_INTEGER,   (const void *)(&$1)); }
-;
-
 
 %%
 
@@ -91,9 +112,13 @@ void
 yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg) 
 {
   UNUSED(locp);
-  UNUSED(parsed);
+  parsed->error = true;
+  for (size_t i = 0; i < strlen(msg); i++)
+  {
+    vector_push(parsed->error_msg, msg[i]);
+  }
   
-	fprintf(stderr, "--> %s\n", msg);
+  fprintf(stderr, "--> %s\n", msg);
 }
 
 void
