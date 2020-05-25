@@ -1,5 +1,7 @@
 ﻿using NpSql;
 using System;
+using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace NpSql_Cli
@@ -113,8 +115,17 @@ namespace NpSql_Cli
                 {
                     command.CommandText = sql;
 
-                    using (var reader = command.ExecuteReader())
+                    using (var reader = (NpSqlDataReader)command.ExecuteReader())
                     {
+                        int rowLength = WriteColumnHeader(reader);
+                        rowLength = WriteVerticalSeperator(reader, rowLength);
+
+                        while (reader.Read())
+                        {
+                            WriteRow(reader);
+                        }
+
+                        rowLength = WriteVerticalSeperator(reader, rowLength);
 
                     }
                 }
@@ -123,6 +134,89 @@ namespace NpSql_Cli
             {
                 Console.WriteLine($"Error: {e.Message}");
             }
+        }
+
+        private static void WriteRow(NpSqlDataReader reader)
+        {
+            Console.Write('|');
+
+            var i = 0;
+            var leadingSpace = 0;
+            var s = string.Empty;
+            foreach (NpSqlColumnDefinition column in reader.GetColumnSchema())
+            {
+                var columnLength = column.Name.Length + 8;
+
+                switch (column.Type)
+                {
+
+                    case NpSql.Nqp.NqpTypes.Char:
+                        s = reader.GetString(0).Trim();
+                        break;
+                    case NpSql.Nqp.NqpTypes.Int:
+                        s = reader.GetInt32(1).ToString();
+                        break;
+                }
+
+                if (s.Length > columnLength)
+                {
+                    s = s.Substring(0, s.Length - 5);
+                    s += "...";
+                }
+
+                leadingSpace = columnLength - (s.Length + 1);
+
+                Console.Write(new string(' ', leadingSpace));
+                Console.Write(s);
+                Console.Write(' ');
+                Console.Write("|");
+                i++;
+            }
+
+            Console.WriteLine();
+        }
+
+        private static int WriteColumnHeader(NpSqlDataReader reader)
+        {
+            var rowLength = 2;
+
+            rowLength = WriteVerticalSeperator(reader, rowLength);
+            Console.Write("|");
+            foreach (NpSqlColumnDefinition column in reader.GetColumnSchema())
+            {
+
+                var minLength = column.Name.Length + 8; // 4 whitespace before and aftername
+                                                        //Write beginning whitespace
+                Console.Write(new string(' ', 4));
+                //Write column Name
+                Console.Write(column.Name);
+                //write trailing whitespace
+                Console.Write(new string(' ', 4));
+                Console.Write("|");
+
+                rowLength += minLength + 1;
+            }
+
+
+            Console.WriteLine();
+            return rowLength;
+        }
+
+        private static int WriteVerticalSeperator(NpSqlDataReader reader, int rowLength)
+        {
+            Console.Write("+");
+            foreach (NpSqlColumnDefinition column in reader.GetColumnSchema())
+            {
+
+                var minLength = column.Name.Length + 8; // 4 whitespace before and aftername
+                Console.Write(new string('-', minLength));
+                Console.Write("+");
+
+                rowLength += minLength + 1;
+            }
+
+            Console.WriteLine();
+            return rowLength;
         }
     }
 }
