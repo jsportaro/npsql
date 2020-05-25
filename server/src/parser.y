@@ -18,7 +18,6 @@
 
 
 void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
-void emit(char *s, ...);
 %}
 
 %code requires
@@ -120,15 +119,3 @@ yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg)
   
   fprintf(stderr, "--> %s\n", msg);
 }
-
-void
-emit(char *s, ...)
-{
-  va_list ap;
-  va_start(ap, s);
-
-  printf("rpn: ");
-  vfprintf(stdout, s, ap);
-  printf("\n");
-}
-
