@@ -44,13 +44,15 @@ struct result_set
 
 struct query_results
 {
-    int sets_to_return;
+    uint32_t sets_to_return;
     int rows_to_return;
 
     struct result_set set;
     vector_type(uint8_t) current;
 
     struct parsed_sql *parsed_sql;
+    uint32_t current_stmt;
+    struct plan *current_plan;
 };
 
 

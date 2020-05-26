@@ -2,6 +2,7 @@
 #include <npsql.h>
 #include <networking.h>
 #include <parser.h>
+#include <planner.h>
 #include <sql.h>
 
 #include <stdio.h>
@@ -21,8 +22,9 @@ struct query_results * submit_query(struct query_engine *query_engine, uint8_t *
     struct query_results *results = malloc(sizeof(struct query_results));
 
     results->parsed_sql = parse_sql((char *)query, length);
+    results->current_stmt = 0;
+    results->sets_to_return = vector_size(results->parsed_sql->stmts);
 
-    results->sets_to_return = 1;
     results->rows_to_return = 104;
     results->current = NULL;
     results->set.execution_error = false;
@@ -43,10 +45,13 @@ struct query_results * submit_query(struct query_engine *query_engine, uint8_t *
 
 bool get_next_set(struct query_results *results)
 {
-    if (results->sets_to_return == 0)
+    if (results->sets_to_return == results->current_stmt)
     {
         return false;
     }
+
+    results->current_plan =  create_plan(results->parsed_sql->stmts[results->current_stmt]);
+    
 
     results->set.has_rows = true;
     results->set.message.bytes = NULL;
