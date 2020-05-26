@@ -144,6 +144,11 @@ namespace NpSql
             throw new NotImplementedException();
         }
 
+        public IEnumerable<NpSqlColumnDefinition> GetColumnSchema()
+        {
+            return queryResults.Columns;
+        }
+
         public DataTable GetSchemaTable()
         {
             throw new NotSupportedException();

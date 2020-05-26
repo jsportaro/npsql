@@ -7,12 +7,10 @@
 void test_no_data_select()
 {
     char *sql = "select VARNUM - 2 + 2 * 3 / 4;";
-    
 	size_t len = strlen(sql);
-
     struct parsed_sql *result = parse_sql(sql, len);
 
-    if (result->has_error == true)
+    if (result->error == true)
     {
         exit(EXIT_FAILURE);
     }
@@ -24,9 +22,7 @@ void test_no_data_select()
 void test_select_table_ref()
 {
     char *sql = "select name from people;";
-
 	size_t len = strlen(sql);
-
     struct parsed_sql *result = parse_sql(sql, len);
 
     free_stmts(result);
@@ -37,9 +33,7 @@ void test_select_table_ref()
 void test_select_table_ref_where()
 {
     char *sql = "select name from people where name = 'heather';";
-
 	size_t len = strlen(sql);
-
     struct parsed_sql *result = parse_sql(sql, len);
 
     free_stmts(result);
@@ -47,11 +41,33 @@ void test_select_table_ref_where()
     fprintf(stdout, "Done\n");
 }
 
+void test_parse_error()
+{
+    char *sql = "selddect name from people wheddre name = 'heather';";
+	size_t len = strlen(sql);
+    struct parsed_sql *result = parse_sql(sql, len);
+
+    free_stmts(result);
+    
+    fprintf(stdout, "Done\n");
+}
+
+void test_all_the_things()
+{
+    char *sql = "select * from people;";
+	size_t len = strlen(sql);
+    struct parsed_sql *result = parse_sql(sql, len);
+
+    free_stmts(result);
+    
+    fprintf(stdout, "Done\n");
+}
 int main(void)
 {   
     //test_no_data_select();
     //test_select_table_ref();
-
-    test_select_table_ref_where();
+    //test_select_table_ref_where();
+    //test_parse_error();
+    test_all_the_things();
     exit(EXIT_SUCCESS);
 }

@@ -35,7 +35,7 @@ uint8_t goodbye[3] = { (uint8_t)NQP_COMEBACKSOON, 0x00, 0x00 };
 static void* query_loop(void* args);
 static int handle_hello(SOCKET socket, uint8_t *session_id);
 static void handle_goodbye(struct session *session);
-static void say_completed(struct session *session, enum completed_status status, struct byte_buffer *message);
+static void say_completed(struct session *session, enum completed_status status, vector_type(char) message);
 static void say_columns(struct session *session, struct query_results *results);
 static vector_type(uint8_t) say_rowset(struct session *session, vector_type(uint8_t) rowset_bytes);
 static void handle_query(struct session *session, size_t payload_size);
@@ -162,19 +162,20 @@ static void handle_goodbye(struct session *session)
     send_buffer(session->socket, goodbye, sizeof(goodbye));
 }
 
-static void say_completed(struct session *session, enum completed_status status, struct byte_buffer *message)
+static void say_completed(struct session *session, enum completed_status status, vector_type(char) message)
 {
-    size_t msg_length = COMPLETED_MIN_LENGTH + message->length;
+    size_t msg_size = vector_size(message);
+    size_t msg_length = COMPLETED_MIN_LENGTH + msg_size;
     uint8_t *completed = malloc(msg_length);
 
     // Header
     completed[HEADER_TYPE_OFFSET] = (uint8_t)NQP_COMPLETED;
-    htops(COMPLETED_MIN_PAYLOAD + message->length, &completed[HEADER_SIZE_OFFSET]);
+    htops(COMPLETED_MIN_PAYLOAD + msg_size, &completed[HEADER_SIZE_OFFSET]);
 
     // Payload
     completed[COMPLETED_RESULT_OFFSET] = (uint8_t)status;
-    htops((int16_t)message->length, &completed[COMPLETED_SIZE_OFFSET]);
-    memcpy(&completed[COMPLETED_MESSAGE_OFFSET], message->bytes, message->length);
+    htops((int16_t)msg_size, &completed[COMPLETED_SIZE_OFFSET]);
+    memcpy(&completed[COMPLETED_MESSAGE_OFFSET], message, msg_size);
 
     send_buffer(session->socket, completed, msg_length);
 
@@ -247,9 +248,9 @@ static void handle_query(struct session *session, size_t payload_size)
     receive_buffer(session->socket, query, payload_size);
     results = submit_query(session->manager->engine, query, payload_size);
 
-    if (results->parse_error == true)
+    if (results->parsed_sql->error == true)
     {
-        say_completed(session, COMPLETED_FAILURE, &results->parse_message);
+        say_completed(session, COMPLETED_FAILURE, results->parsed_sql->error_msg);
 
         goto cleanup;
     }
@@ -258,7 +259,7 @@ static void handle_query(struct session *session, size_t payload_size)
     {
         if (results->set.execution_error == true)
         {
-            say_completed(session, COMPLETED_FAILURE, &results->parse_message);
+            say_completed(session, COMPLETED_FAILURE, results->parsed_sql->error_msg);
             
             goto cleanup;
         }
@@ -266,7 +267,7 @@ static void handle_query(struct session *session, size_t payload_size)
         {
             if (!results->set.has_rows)
             {
-                say_completed(session, COMPLETED_SUCCESS, &results->set.message);
+                say_completed(session, COMPLETED_SUCCESS, results->parsed_sql->error_msg);
 
                 goto cleanup;
             }
@@ -294,7 +295,7 @@ static void handle_query(struct session *session, size_t payload_size)
         }
     }
 
-    say_completed(session, COMPLETED_SUCCESS, &results->set.message);
+    say_completed(session, COMPLETED_SUCCESS, results->parsed_sql->error_msg);
 
 cleanup:
     free_results(results);

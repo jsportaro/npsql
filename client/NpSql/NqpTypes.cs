@@ -4,7 +4,7 @@ using System.Text;
 
 namespace NpSql.Nqp
 {
-    internal enum NqpTypes
+    public enum NqpTypes
     {
         Int,
         Char

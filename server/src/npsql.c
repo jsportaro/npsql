@@ -19,11 +19,8 @@ int query_engine_init(char *data_file, char *log_file , struct query_engine *que
 struct query_results * submit_query(struct query_engine *query_engine, uint8_t *query, size_t length)
 {
     struct query_results *results = malloc(sizeof(struct query_results));
-    results->parse_error = false;
 
-
-    results->parse_message.bytes = NULL;
-    results->parse_message.length = 0;
+    results->parsed_sql = parse_sql((char *)query, length);
 
     results->sets_to_return = 1;
     results->rows_to_return = 104;
@@ -85,6 +82,7 @@ void free_results(struct query_results *results)
     }
 
     vector_free(results->set.columns);
+    free_stmts(results->parsed_sql);
     free(results);
 }
 

@@ -18,7 +18,6 @@
 
 
 void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
-void emit(char *s, ...);
 %}
 
 %code requires
@@ -88,7 +87,8 @@ table_reference:
 ;
 
 opt_where:
-    WHERE expr                       { $$ = $2; }
+                                     { $$= NULL; }
+  | WHERE expr                       { $$ = $2;  }
 ;
 
 expr:
@@ -111,19 +111,11 @@ void
 yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg) 
 {
   UNUSED(locp);
-  UNUSED(parsed);
+  parsed->error = true;
+  for (size_t i = 0; i < strlen(msg); i++)
+  {
+    vector_push(parsed->error_msg, msg[i]);
+  }
   
   fprintf(stderr, "--> %s\n", msg);
 }
-
-void
-emit(char *s, ...)
-{
-  va_list ap;
-  va_start(ap, s);
-
-  printf("rpn: ");
-  vfprintf(stdout, s, ap);
-  printf("\n");
-}
-

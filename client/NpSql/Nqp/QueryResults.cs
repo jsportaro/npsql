@@ -10,7 +10,7 @@ namespace NpSql.Nqp
     internal class QueryResults
     {
         private MessageReader currentReader;
-        private List<ColumnDefinition> columnsSchema = new List<ColumnDefinition>();
+        private List<NpSqlColumnDefinition> columnsSchema = new List<NpSqlColumnDefinition>();
         private NetworkStream stream;
         private object[] rowValues;
         private bool receivedCompleted = false;
@@ -18,13 +18,15 @@ namespace NpSql.Nqp
 
         internal int FieldCount { get => columnsSchema.Count; }
 
+        internal IEnumerable<NpSqlColumnDefinition> Columns { get { return columnsSchema; } }
+
         public QueryResults(NetworkStream stream)
         {
             this.stream = stream;
         }
 
         public bool NextRow()
-        {
+         {
             if (receivedCompleted)
             {
                 return !receivedCompleted;
@@ -62,7 +64,6 @@ namespace NpSql.Nqp
                 default:
                     break;
             }
-
 
             return !receivedCompleted;
         }
@@ -128,7 +129,7 @@ namespace NpSql.Nqp
                 var name = currentReader.ReadString(nameLength);
 
 
-                columnsSchema.Add(new ColumnDefinition
+                columnsSchema.Add(new NpSqlColumnDefinition
                 {
                     Name = name,
                     Offset = offset,

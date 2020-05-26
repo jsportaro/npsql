@@ -1,10 +1,12 @@
-﻿using System;
+﻿using NpSql.Nqp;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
 
-namespace NpSql.Nqp
+namespace NpSql
 {
-    internal class ColumnDefinition
+    public class NpSqlColumnDefinition
     {
         public string Name { get; set; }
         public NqpTypes Type { get; set; }
@@ -12,7 +14,7 @@ namespace NpSql.Nqp
         public short Offset { get; set; }
     }
 
-    internal class ColumnDefinition<T> : ColumnDefinition
+    public class NpSqlColumnDefinition<T> : NpSqlColumnDefinition
     {
         public T CurrentValue;
     }

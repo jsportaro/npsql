@@ -18,7 +18,7 @@ namespace NpSql.Nqp
     {
         private BinaryReader reader;
         private NetworkStream stream;
-        private List<ColumnDefinition> columns = new List<ColumnDefinition>();
+        private List<NpSqlColumnDefinition> columns = new List<NpSqlColumnDefinition>();
         private int totalSize;
         private MessageStatus status;
 
@@ -122,7 +122,7 @@ namespace NpSql.Nqp
             switch (type)
             {
                 case NqpTypes.Char:
-                    columns.Add(new ColumnDefinition<string>
+                    columns.Add(new NpSqlColumnDefinition<string>
                     {
                         Name = name,
                         Size = size,
@@ -130,7 +130,7 @@ namespace NpSql.Nqp
                     });
                     break;
                 case NqpTypes.Int:
-                    columns.Add(new ColumnDefinition<int>
+                    columns.Add(new NpSqlColumnDefinition<int>
                     {
                         Name = name,
                         Size = size,
