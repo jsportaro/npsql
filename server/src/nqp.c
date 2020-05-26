@@ -1,4 +1,5 @@
 #include <nqp.h>
+#include <scans.h>
 
 #include <networking.h>
 
@@ -195,10 +196,12 @@ static void say_columns(struct session *session, struct query_results *results)
     vector_push(column_bytes, 0x00);
 
     // Payload
-    for (struct column *col = vector_begin(results->set.columns); col != vector_end(results->set.columns); ++col) 
+    vector_type(struct column *) columns = get_scan_columns(results->current_scan);
+
+    for (struct column *col = *vector_begin(columns); col != *vector_end(columns); ++col) 
     {
         long start_size = vector_size(column_bytes);
-        uint16_t length = COLUMN_MIN_LENGTH + col->name.length;
+        uint16_t length = COLUMN_MIN_LENGTH + vector_size(col->name);
 
         vector_grow(column_bytes, length  + start_size);
 
@@ -206,8 +209,8 @@ static void say_columns(struct session *session, struct query_results *results)
 
         column_start[0] = (uint8_t)col->type;                         //  Column Type
         htops((uint16_t)col->size, &column_start[1]);                 //  Column Type Size (# bytes)
-        htops((uint16_t)col->name.length, &column_start[3]);          //  Name Size (# bytes)
-        memcpy(&column_start[5], col->name.bytes, col->name.length);  //  Name 
+        htops((uint16_t)vector_size(col->name), &column_start[3]);          //  Name Size (# bytes)
+        memcpy(&column_start[5], col->name, vector_size(col->name));  //  Name 
 
         vector_set_size(column_bytes, length + start_size);
     }
@@ -257,26 +260,28 @@ static void handle_query(struct session *session, size_t payload_size)
 
     while (get_next_set(results))
     {
-        if (results->set.execution_error == true)
-        {
-            say_completed(session, COMPLETED_FAILURE, results->parsed_sql->error_msg);
-            
-            goto cleanup;
-        }
-        else 
-        {
-            if (!results->set.has_rows)
-            {
-                say_completed(session, COMPLETED_SUCCESS, results->parsed_sql->error_msg);
+        bool sent_columns = false;
+        rowset_bytes = new_rowset_buffer();
 
-                goto cleanup;
+        // This is very awkward because in order to know the types of 
+        // the columns, I need to evaluate the expressions.  In the future,
+        // during parsing and binding, I could derive the final type as the
+        // expression tree is being built.  Then I wouldn't have to check
+        // if the columns were sent on every row. 
+        //
+        // Thinking more on it, that would also allow me to bomb out 
+        // obviously incorrect expressions. For instance, if a user wrote
+        // something like `select 1 + 'a'`.  Int and strings don't add.
+
+        while (next_record(results))
+        {
+            if (sent_columns != true)
+            {
+                say_columns(session, results);
+                sent_columns = true;
             }
 
-            say_columns(session, results);
-
-            rowset_bytes = new_rowset_buffer();
-
-            while (next_record(results))
+            if (has_rows(results))
             {
                 if (vector_size(rowset_bytes) + vector_size(results->current) > MAX_MESSAGE_SIZE)
                 {
@@ -287,12 +292,14 @@ static void handle_query(struct session *session, size_t payload_size)
                 memcpy(row_start, results->current, vector_size(results->current));
                 vector_increase_size(rowset_bytes, vector_size(results->current));
             }
-
-            if (vector_size(rowset_bytes) > 0)
-            {
-                rowset_bytes = say_rowset(session, rowset_bytes);
-            }
+            
         }
+
+        if (vector_size(rowset_bytes) > 0)
+        {
+            rowset_bytes = say_rowset(session, rowset_bytes);
+        }
+    
     }
 
     say_completed(session, COMPLETED_SUCCESS, results->parsed_sql->error_msg);

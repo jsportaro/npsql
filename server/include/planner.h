@@ -3,25 +3,7 @@
 
 #include <executor.h>
 #include <parser.h>
-
-enum plan_type
-{
-    PLAN_PROJECT
-};
-
-struct plan
-{
-    enum plan_type type;
-
-    struct scan *(*open)(struct plan *plan);
-};
-
-struct project
-{
-    enum plan_type type;
-
-    vector_type(struct expr *) expr_list;
-};
+#include <plans.h>
 
 struct plan * create_plan(struct sql_stmt *sql);
 

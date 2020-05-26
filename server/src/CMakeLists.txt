@@ -39,6 +39,9 @@ set (COMMON_SOURCE
     common.c
     nqp.c
     npsql.c
+    plans.c
+    scans.c
+    planner.c
     sql.c 
     ${PARSER_SOURCE}
     )

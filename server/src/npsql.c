@@ -27,7 +27,8 @@ struct query_results * submit_query(struct query_engine *query_engine, uint8_t *
 
     results->rows_to_return = 104;
     results->current = NULL;
-    results->set.execution_error = false;
+    results->current_plan = NULL;
+    results->current_scan = NULL;
     uint8_t row[] = { 0x6A, 0x6F, 0x73, 0x65, 0x70, 0x68, 0x20, 0x20, 0x20, 0x20, 0x20, 0x00, 0x00, 0x00 };
 
     for (int i = 0; i < 14; i++)
@@ -42,61 +43,65 @@ struct query_results * submit_query(struct query_engine *query_engine, uint8_t *
     return results;
 }
 
-
-bool get_next_set(struct query_results *results)
+bool has_rows(struct query_results *r)
 {
-    if (results->sets_to_return == results->current_stmt)
+    return r->current_scan->has_rows;
+}
+
+bool get_next_set(struct query_results *r)
+{
+    if (r->sets_to_return == r->current_stmt)
     {
         return false;
     }
 
-    results->current_plan =  create_plan(results->parsed_sql->stmts[results->current_stmt]);
-    
+    r->current_plan =  create_plan(r->parsed_sql->stmts[r->current_stmt]);
+    r->current_scan = r->current_plan->open(r->current_plan);
+    vector_free(r->current_columns);
 
-    results->set.has_rows = true;
-    results->set.message.bytes = NULL;
-    results->set.message.length = 0;
-    struct column column;
+    // struct column column;
 
-    column.name.bytes = malloc(4);
-    column.name.length = 4;
-    column.type = TYPE_CHAR;
-    column.size = 10;
-    memcpy(column.name.bytes, "name", 4);
-    results->set.columns = NULL;
-    vector_push(results->set.columns, column);
+    // column.name.bytes = malloc(4);
+    // column.name.length = 4;
+    // column.type = TYPE_CHAR;
+    // column.size = 10;
+    // memcpy(column.name.bytes, "name", 4);
+    // r->set.columns = NULL;
+    // vector_push(r->set.columns, column);
 
-    column.name.bytes = malloc(3);
-    column.name.length = 3;
-    column.type = TYPE_INT;
-    column.size = 4;
-    memcpy(column.name.bytes, "age", 3);
+    // column.name.bytes = malloc(3);
+    // column.name.length = 3;
+    // column.type = TYPE_INT;
+    // column.size = 4;
+    // memcpy(column.name.bytes, "age", 3);
 
-    vector_push(results->set.columns, column);
+    // vector_push(r->set.columns, column);
 
-    results->sets_to_return--;
+    // r->sets_to_return--;
 
     return true;
 }
 
-void free_results(struct query_results *results)
+void free_results(struct query_results *r)
 {
-    for (struct column *col = vector_begin(results->set.columns); col != vector_end(results->set.columns); ++col) 
+    for (struct column *col = vector_begin(r->current_columns); col != vector_end(r->current_columns); ++col) 
     {
-        free(col->name.bytes);
+        vector_free(col->name);
     }
 
-    vector_free(results->set.columns);
-    free_stmts(results->parsed_sql);
-    free(results);
+    vector_free(r->current_columns);
+    free_stmts(r->parsed_sql);
+    free(r);
 }
 
-bool next_record(struct query_results *results)
+bool next_record(struct query_results *r)
 {
-    if (results->rows_to_return < 0)
+    if (r->current_scan->next(r->current_scan) == true)
     {
-        return false;
+        //  If it has rows, it has columns.  If columns are null,
+        //  we need to build them
+        
     }
-    results->rows_to_return--;
-    return true;
+
+    return false;
 }

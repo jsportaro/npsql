@@ -18,16 +18,6 @@ create_plan(struct sql_stmt *sql)
     return plan;
 }
 
-struct plan * create_no_data_select_plan(struct select *select)
-{
-    struct project *p = malloc(sizeof(struct project));
-
-    p->type = PLAN_PROJECT;
-    p->expr_list = select->expr_list;
-
-    return (struct plan *)p;
-}
-
 struct plan * create_select_plan(struct select *select)
 {
     struct plan *plan = NULL;
@@ -35,7 +25,7 @@ struct plan * create_select_plan(struct select *select)
     // Handle not data special case
     if (select->table_refs == NULL)
     {
-        plan = create_no_data_select_plan(struct select *select);
+        plan = create_no_data_select_plan(select);
     }
 
     return plan;
