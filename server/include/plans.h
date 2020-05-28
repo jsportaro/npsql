@@ -5,6 +5,8 @@
 #include <sql.h>
 #include <vector.h>
 
+// Maybe the following two decs 
+// go into storage.h?
 enum column_type
 {
     TYPE_INT,
@@ -30,7 +32,7 @@ struct plan
     vector_type(struct column) column_list;
 };
 
-struct project
+struct plan_project
 {
     enum plan_type type;
     struct scan * (*open)(struct plan *project);
@@ -39,5 +41,6 @@ struct project
 };
 
 struct plan * create_no_data_select_plan(struct select *select);
+void free_plan(struct plan *plan);
 
 #endif

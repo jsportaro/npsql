@@ -3,8 +3,6 @@
 #include <buffer.h>
 #include <scans.h>
 
-
-
 struct scan_field
 eval(struct expr *expr)
 {
@@ -113,12 +111,36 @@ create_scan_project(vector_type(struct expr *) expr_list, struct scan *scan)
     return (struct scan *)sp;
 }
 
-vector_type(struct column *) 
-get_scan_columns(struct scan *s)
+static void 
+free_scan_project(struct scan *s)
 {
-    vector_type(struct column *) c = NULL;
+    // Note: do not free sp->expr_list
+    //       it "belongs" to struct select
 
-    UNUSED(s);
+    struct scan_project *sp = (struct scan_project *)s;
 
-    return c;
+    vector_free(sp->scan_fields);
+    
+    sp->scan_fields = NULL;
+    sp->expr_list = NULL;
+}
+
+void 
+free_scan(struct scan *s)
+{   
+    if (s == NULL)
+    {
+        return;
+    }
+
+    switch (s->type)
+    {
+        case SCAN_PROJECT: 
+            free_scan_project(s);
+            free_scan(s->scan);
+            free(s);
+            break;
+        default:
+            break;
+    }
 }

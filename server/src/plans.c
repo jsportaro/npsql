@@ -7,7 +7,7 @@
 struct scan * 
 open_no_data_select_scan(struct plan *plan)
 {
-    struct project *p = (struct project *)plan;
+    struct plan_project *p = (struct plan_project *)plan;
     
     return create_scan_project(p->expr_list, NULL);
 }
@@ -90,7 +90,7 @@ bind_columns(struct select *select)
 struct plan * 
 create_no_data_select_plan(struct select *select)
 {
-    struct project *p = malloc(sizeof(struct project));
+    struct plan_project *p = malloc(sizeof(struct plan_project));
 
     p->type = PLAN_PROJECT;
     p->expr_list = select->expr_list;
@@ -98,4 +98,36 @@ create_no_data_select_plan(struct select *select)
     p->open = &open_no_data_select_scan;
 
     return (struct plan *)p;
+}
+
+static void
+free_plan_project(struct plan *p)
+{
+    // Note: do not free pp->expr_list
+    //       it "belongs" to struct select
+
+    struct plan_project *pp = (struct plan_project *)p;
+
+    vector_free(pp->column_list);
+}
+
+void 
+free_plan(struct plan *p)
+{
+    if (p == NULL)
+    {
+        return;
+    }
+
+    switch (p->type)
+    {
+        case PLAN_PROJECT:
+            free_plan_project(p);
+          
+            free(p);
+            break;
+        default:
+            
+            break;
+    }
 }
