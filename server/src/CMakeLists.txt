@@ -36,6 +36,7 @@ else()
 endif()
 
 set (COMMON_SOURCE
+    buffer.c
     common.c
     nqp.c
     npsql.c

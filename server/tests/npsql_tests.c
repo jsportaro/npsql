@@ -4,7 +4,7 @@
 
 int main(void)
 {
-    char *sql = "select 1 + 1 * 9;";
+    char *sql = "select 1 + 1, 1 + 1;";
     struct query_results * r = submit_query(NULL, sql, strlen(sql));
 
     get_next_set(r);

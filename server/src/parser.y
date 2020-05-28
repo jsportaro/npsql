@@ -55,7 +55,7 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 
 stmt_list: 
     stmt ';'                         { vector_push(parsed->stmts, $1); }
-  | stmt_list stmt  ';'              { vector_push(parsed->stmts, $2); } 
+  | stmt_list stmt ';'               { vector_push(parsed->stmts, $2); } 
   ;
 
 stmt: 

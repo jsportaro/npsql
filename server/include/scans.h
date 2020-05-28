@@ -6,29 +6,26 @@
 
 #include <stdbool.h>
 
-enum column_types
-{
-    TYPE_INT,
-    TYPE_CHAR
-};
-
-struct column
-{
-    vector_type(uint8_t) name;
-    enum column_types type;
-    uint16_t size;
-};
-
-
 enum scan_type
 {
     SCAN_PROJECT
+};
+
+struct scan_field
+{
+    bool error;
+    enum expr_type type;
+    union {
+        int number;
+        char *s;
+    } value;
 };
 
 struct scan
 {
     enum scan_type type;
     bool (*next)(struct scan *scan);
+    vector_type(struct scan_field) scan_fields;
     struct scan *scan;
     bool has_rows;
 };
@@ -37,11 +34,13 @@ struct scan_project
 {
     enum scan_type type;
     bool (*next)(struct scan *scan);
+    vector_type(struct scan_field) scan_fields;
     struct scan *scan;
     bool has_rows;
 
     vector_type(struct expr *) expr_list;
-    bool hasNext;
+    bool has_next;
+    vector_type(uint8_t) row_data;
 };
 
 struct scan * create_scan_project(vector_type(struct expr *) expr_list, struct scan *scan);

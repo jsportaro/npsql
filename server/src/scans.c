@@ -1,34 +1,20 @@
 
 #include <common.h>
+#include <buffer.h>
 #include <scans.h>
 
-// void write_result(int ordinal, uint8_t **buffer, size_t *written)
-// {
-
-// }
 
 
-
-struct eval_res
-{
-    bool error;
-    enum column_types type;
-    union {
-        int number;
-        char *s;
-    } value;
-};
-
-struct eval_res
+struct scan_field
 eval(struct expr *expr)
 {
     struct term_expr *term;
     struct infix_expr *infix = NULL;
     
-    struct eval_res r;
-    struct eval_res lr, rr;
+    struct scan_field r;
+    struct scan_field lr, rr;
 
-    r.type = TYPE_INT;
+    r.type = EXPR_INTEGER;
     r.value.number = 0;
     r.error = false;
     switch(expr->type)
@@ -36,13 +22,13 @@ eval(struct expr *expr)
         case EXPR_INTEGER:
             term = (struct term_expr *)expr;
             r.value.number = term->value.number;
-            r.type = TYPE_INT;
+            r.type = EXPR_INTEGER;
             return r;
         case EXPR_IDENIFIER:
         case EXPR_STRING:
             term = (struct term_expr *)expr;
             r.value.s = term->value.string;
-            r.type = TYPE_CHAR;
+            r.type = EXPR_IDENIFIER;
             return r;
         case EXPR_ADD:
         case EXPR_SUB:
@@ -54,7 +40,7 @@ eval(struct expr *expr)
             rr = eval(infix->r);
            
             // Type saftey!  Also, only ints for now
-            if (lr.type != rr.type && lr.type == TYPE_INT)
+            if (lr.type != rr.type && lr.type == EXPR_INTEGER)
             {
                 r.error = true;
                 goto end;
@@ -88,24 +74,28 @@ static bool
 scan_project_next(struct scan *scan)
 {
     struct scan_project *sp = (struct scan_project *)scan;
-    
-    if (sp->hasNext == true)
-    {
-        if (sp->scan == NULL)
-        {
-            //  No data on the project
-            //  Evaluate expressions and return;
-             for (size_t i = 0; i < vector_size(sp->expr_list); i++)
-            {
-                struct expr *expr = sp->expr_list[i];
-                struct eval_res r = eval(expr);
+    vector_type(struct scan_field) scan_fields = NULL;
 
-                UNUSED(r);
-            }
-        }
+    if (sp->has_next == false)
+    {
+        return false;
     }
 
-    return sp->hasNext;
+    if (sp->scan == NULL)
+    {
+        //  No data on the project
+        //  Evaluate expressions and return;
+        for (size_t i = 0; i < vector_size(sp->expr_list); i++)
+        {
+            struct expr *expr = sp->expr_list[i];
+            struct scan_field r = eval(expr);
+
+            vector_push(scan_fields, r);
+        }
+    }
+    sp->has_next = false;
+    sp->scan_fields = scan_fields;
+    return vector_size(scan_fields) > 0 ? true : false;
 }
 
 struct scan * 
@@ -117,7 +107,7 @@ create_scan_project(vector_type(struct expr *) expr_list, struct scan *scan)
     sp->expr_list = expr_list;
     sp->next = &scan_project_next;
     sp->scan = scan;
-    sp->hasNext = true;
+    sp->has_next = true;
     sp->has_rows = true;
 
     return (struct scan *)sp;
