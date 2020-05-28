@@ -8,7 +8,7 @@ void yyerror(char *s, ...);
 %option reentrant bison-bridge noyywrap
 
 id        [a-zA-Z][a-zA-Z_0-9]*
-int       [-+]?[0-9]+
+int       [0-9]+
 blank     [ \t\n]
 string    '(\\.|''|[^'\n])*'
 operators [-+&~|^/%*(),.;!]  

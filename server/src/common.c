@@ -31,6 +31,26 @@ void htops(const int16_t value, uint8_t *buffer)
     }
 }
 
+void htopi(const int32_t value, uint8_t *buffer)
+{
+    uint8_t *p = (uint8_t *)&value;
+
+    if (byte_order() == LITTLE_ENDIAN)
+    {
+        buffer[0] = p[0];
+        buffer[1] = p[1];
+        buffer[2] = p[2];
+        buffer[3] = p[3];
+    } 
+    else
+    {
+        buffer[0] = p[4];
+        buffer[1] = p[3];
+        buffer[2] = p[2];
+        buffer[3] = p[0];
+    }
+}
+
 int16_t ptohs(uint8_t *buffer)
 {
     int16_t s = 0;

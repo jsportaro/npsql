@@ -1,4 +1,7 @@
+#include <buffer.h>
 #include <nqp.h>
+#include <plans.h>
+#include <scans.h>
 
 #include <networking.h>
 
@@ -184,7 +187,6 @@ static void say_completed(struct session *session, enum completed_status status,
 
 static void say_columns(struct session *session, struct query_results *results)
 {  
-    UNUSED(session);
     UNUSED(results);
 
     vector_type(uint8_t) column_bytes = NULL;
@@ -195,19 +197,22 @@ static void say_columns(struct session *session, struct query_results *results)
     vector_push(column_bytes, 0x00);
 
     // Payload
-    for (struct column *col = vector_begin(results->set.columns); col != vector_end(results->set.columns); ++col) 
-    {
-        long start_size = vector_size(column_bytes);
-        uint16_t length = COLUMN_MIN_LENGTH + col->name.length;
+    vector_type(struct column) columns = results->current_plan->column_list;
 
+    for (size_t i = 0; i < vector_size(columns); i++)
+    {
+        struct column col = columns[i];
+        long start_size = vector_size(column_bytes);
+        uint16_t length = COLUMN_MIN_LENGTH + vector_size(col.name);
+        
         vector_grow(column_bytes, length  + start_size);
 
         uint8_t *column_start = &column_bytes[start_size];
 
-        column_start[0] = (uint8_t)col->type;                         //  Column Type
-        htops((uint16_t)col->size, &column_start[1]);                 //  Column Type Size (# bytes)
-        htops((uint16_t)col->name.length, &column_start[3]);          //  Name Size (# bytes)
-        memcpy(&column_start[5], col->name.bytes, col->name.length);  //  Name 
+        column_start[0] = (uint8_t)col.type;                         //  Column Type
+        htops((uint16_t)col.size, &column_start[1]);                 //  Column Type Size (# bytes)
+        htops((uint16_t)vector_size(col.name), &column_start[3]);          //  Name Size (# bytes)
+        memcpy(&column_start[5], col.name, vector_size(col.name));  //  Name 
 
         vector_set_size(column_bytes, length + start_size);
     }
@@ -241,11 +246,11 @@ static vector_type(uint8_t) say_rowset(struct session *session, vector_type(uint
 
 static void handle_query(struct session *session, size_t payload_size)
 {
-    uint8_t *query = malloc(payload_size);
+    char *query = malloc(payload_size);
     struct query_results *results = NULL;
     vector_type(uint8_t) rowset_bytes = NULL;
 
-    receive_buffer(session->socket, query, payload_size);
+    receive_buffer(session->socket, (uint8_t *)query, payload_size);
     results = submit_query(session->manager->engine, query, payload_size);
 
     if (results->parsed_sql->error == true)
@@ -257,42 +262,42 @@ static void handle_query(struct session *session, size_t payload_size)
 
     while (get_next_set(results))
     {
-        if (results->set.execution_error == true)
+        rowset_bytes = new_rowset_buffer();
+
+        say_columns(session, results);
+
+        while (next_record(results))
         {
-            say_completed(session, COMPLETED_FAILURE, results->parsed_sql->error_msg);
-            
-            goto cleanup;
-        }
-        else 
-        {
-            if (!results->set.has_rows)
-            {
-                say_completed(session, COMPLETED_SUCCESS, results->parsed_sql->error_msg);
-
-                goto cleanup;
-            }
-
-            say_columns(session, results);
-
-            rowset_bytes = new_rowset_buffer();
-
-            while (next_record(results))
-            {
-                if (vector_size(rowset_bytes) + vector_size(results->current) > MAX_MESSAGE_SIZE)
-                {
-                    rowset_bytes = say_rowset(session, rowset_bytes);
-                }
-
-                uint8_t *row_start = &rowset_bytes[vector_size(rowset_bytes)];
-                memcpy(row_start, results->current, vector_size(results->current));
-                vector_increase_size(rowset_bytes, vector_size(results->current));
-            }
-
-            if (vector_size(rowset_bytes) > 0)
+            if (vector_size(rowset_bytes) + vector_size(results->current_scan) > MAX_MESSAGE_SIZE)
             {
                 rowset_bytes = say_rowset(session, rowset_bytes);
             }
+
+            vector_type(uint8_t) bytes = NULL;
+            vector_type(struct scan_field) fields = results->current_scan->scan_fields;
+            for (size_t i = 0; i < vector_size(fields); i++)
+            {
+                struct scan_field field = fields[i];
+                switch (field.type)
+                {
+                    case TYPE_INT:
+                        htop32(field.value.number, &bytes);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            size_t b_size =  vector_size(bytes);
+            uint8_t *row_start = &rowset_bytes[vector_size(rowset_bytes)];
+            memcpy(row_start, bytes, b_size);
+            vector_increase_size(rowset_bytes, vector_size(bytes));
         }
+
+        if (vector_size(rowset_bytes) > 0)
+        {
+            rowset_bytes = say_rowset(session, rowset_bytes);
+        }
+    
     }
 
     say_completed(session, COMPLETED_SUCCESS, results->parsed_sql->error_msg);
