@@ -47,6 +47,10 @@ bool get_next_set(struct query_results *r)
     {
         return false;
     }
+
+    free_plan(r->current_plan);
+    free_scan(r->current_scan);
+
     r->current_plan =  create_plan(r->parsed_sql->stmts[r->next_stmt]);
     r->current_scan = r->current_plan->open(r->current_plan);
     r->next_stmt++;
@@ -64,6 +68,8 @@ void free_results(struct query_results *r)
 
     // vector_free(r->current_columns);
     free_stmts(r->parsed_sql);
+    free_plan(r->current_plan);
+    free_scan(r->current_scan);
     free(r);
 }
 

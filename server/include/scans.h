@@ -40,10 +40,8 @@ struct scan_project
 
     vector_type(struct expr *) expr_list;
     bool has_next;
-    vector_type(uint8_t) row_data;
 };
 
 struct scan * create_scan_project(vector_type(struct expr *) expr_list, struct scan *scan);
-vector_type(struct column *) get_scan_columns(struct scan *scan);
-
+void free_scan(struct scan *scan);
 #endif
