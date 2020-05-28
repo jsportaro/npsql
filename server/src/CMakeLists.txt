@@ -37,37 +37,29 @@ endif()
 
 set (COMMON_SOURCE
     buffer.c
+    buffer_manager.c
     common.c
+    file.c
+    log_file.c
     nqp.c
     npsql.c
     plans.c
     scans.c
     planner.c
     sql.c 
+    threads.c
     ${PARSER_SOURCE}
     )
-
-if (WIN32)
-    set (TARGET_SOURCE
-        ${COMMON_SOURCE}
-        )
-endif()
 
 if (UNIX)
     set (TARGET_SOURCE
         networking_linux.c
-        threads_linux.c
         ${COMMON_SOURCE}
         )
 endif()
 
 add_library(backend ${TARGET_SOURCE})
+target_link_libraries(backend PRIVATE Threads::Threads )
 
-add_executable(npsql main.c)
-
-
-if (MSVC)
-	target_link_libraries(npsql PRIVATE backend)
-else()
-	target_link_libraries(npsql PRIVATE backend PRIVATE Threads::Threads)
-endif()
+add_executable(npsql main.c )
+target_link_libraries(npsql PRIVATE backend)

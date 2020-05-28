@@ -1,17 +1,21 @@
-#ifndef __GPSQL_THREADS_H__
-#define __GPSQL_THREADS_H__
+#ifndef __THREADS_H__
+#define __THREADS_H__
 
+#include <pthread.h> 
+#include <stdlib.h> 
+#include <stdio.h>
 #include <stdint.h>
+#include <unistd.h>
 
 typedef void* mutex;
 // typedef void* event;
 typedef void* gpsql_thread;
 typedef void* (*gpsql_thread_func)(void*);
 
-mutex create_mutex();
-void destroy_mutex(mutex m);
-void lock(mutex m);
-void unlock(mutex m);
+pthread_mutex_t * create_mutex();
+void destroy_mutex(pthread_mutex_t *m);
+void lock(pthread_mutex_t *m);
+void unlock(pthread_mutex_t *m);
 
 // event create_event();
 // void event_set(event e);

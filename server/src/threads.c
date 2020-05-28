@@ -1,17 +1,14 @@
 #include <common.h>
 #include <threads.h>
 
-#include <pthread.h> 
-#include <stdlib.h> 
-#include <stdio.h>
-#include <unistd.h>
-
 struct gpsql_thread_linux
 {
     pthread_t pthread;
 };
 
-mutex create_mutex()
+
+pthread_mutex_t * 
+create_mutex()
 {
     pthread_mutex_t *lock = malloc(sizeof(pthread_mutex_t)); 
 
@@ -20,17 +17,20 @@ mutex create_mutex()
     return lock;
 }
 
-void destroy_mutex(mutex m)
+void 
+destroy_mutex(pthread_mutex_t *m)
 {
     free(m);
 }
 
-void lock(mutex m)
+void 
+lock(pthread_mutex_t *m)
 {
     pthread_mutex_lock(m);
 }
 
-void unlock(mutex m)
+void 
+unlock(pthread_mutex_t *m)
 {
     pthread_mutex_unlock(m); 
 }

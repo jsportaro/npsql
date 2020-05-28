@@ -1,6 +1,6 @@
 
 #include <common.h>
-#include <buffer.h>
+#include <buffers.h>
 #include <scans.h>
 
 struct scan_field

@@ -68,7 +68,7 @@ struct session_manager
     int next_open;
     struct query_engine *engine;
     struct session sessions[MAX_SESSION_COUNT];
-    mutex lock;
+    pthread_mutex_t *lock;
 };
 
 void session_manager_init(struct session_manager *session_manager, struct query_engine *query_engine);

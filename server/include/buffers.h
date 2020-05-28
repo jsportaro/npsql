@@ -1,5 +1,5 @@
-#ifndef __BUFFER_H__
-#define __BUFFER_H__
+#ifndef __BUFFERS_H__
+#define __BUFFERS_H__
 
 #include <common.h>
 #include <vector.h>
