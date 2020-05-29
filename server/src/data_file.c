@@ -15,6 +15,7 @@ data_file_open(struct data_file *df, const char *path)
 void 
 data_file_close(struct data_file *df)
 {
+    destroy_mutex(df->lock);
     file_close(df->file);
 }
 

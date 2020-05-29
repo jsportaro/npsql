@@ -23,6 +23,7 @@ new_log_should_write_records()
     lsn = append(&log_file, &a, sizeof(a));
     lsn = append(&log_file, &a, sizeof(a));
     flush_log(&log_file, lsn);
+    close_log_file(&log_file);
 
     assert(log_file.current_page_position == 22);
 }
@@ -126,7 +127,6 @@ should_iterate_through_log()
     lsn = append(&log_file, second, sizeof(second));
     lsn = append(&log_file, third, sizeof(third));
     flush_log(&log_file, lsn);
-    close_log_file(&log_file);
 
     open_iterator(&iterator, &log_file);
 
@@ -141,6 +141,9 @@ should_iterate_through_log()
 
         i++;
     }
+
+    close_log_file(&log_file);
+
 }
 
 void

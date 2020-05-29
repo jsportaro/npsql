@@ -48,9 +48,10 @@ open_log_file(struct log_file *lf, const char *p)
 }
 
 void 
-close_log_file(struct log_file *log_file)
+close_log_file(struct log_file *lf)
 {
-    file_close(log_file->file);
+    destroy_mutex(lf->lock);
+    file_close(lf->file);
 }
 
 LSN 
