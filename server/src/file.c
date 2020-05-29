@@ -26,6 +26,7 @@ file_size(int fd)
 {
     off_t s = lseek(fd, 0, SEEK_END);
     assert(s != -1);
+    UNUSED(S);
 
     return s;
 }
@@ -75,10 +76,11 @@ file_write(int fd, void *buffer, uint32_t size, uint64_t page_offset, size_t *by
     off_t s = lseek(fd, page_offset, SEEK_SET);
     assert(s != -1);
     UNUSED(s);
-    
+
     bw = write(fd, buffer, size);
     assert(bw == size);
-
+    UNUSED(bw);
+    
     if (bytes_written != NULL)
     {
         *bytes_written = size;
