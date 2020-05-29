@@ -9,3 +9,4 @@ endfunction()
 include_directories(.)
 
 ADD_BACKEND_TEST(log_file_tests log_file)
+ADD_BACKEND_TEST(data_file_tests data_file)

@@ -39,6 +39,7 @@ set (COMMON_SOURCE
     buffers.c
     buffer_manager.c
     common.c
+    data_file.c
     file.c
     log_file.c
     nqp.c

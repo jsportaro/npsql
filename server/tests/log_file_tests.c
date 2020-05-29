@@ -192,4 +192,3 @@ int main(void)
     should_iterate_through_log();
     should_iterate_through_page_spanning_log();
 }
-
