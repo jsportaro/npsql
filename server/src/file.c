@@ -58,6 +58,7 @@ file_read(int fd, void *buffer, uint32_t size, uint64_t page_offset, size_t *byt
     uint32_t br = 0;
     off_t s = lseek(fd, page_offset, SEEK_SET);
     assert(s != -1);
+    UNUSED(s);
 
     br = read(fd, buffer, size);
     assert(br == size);
