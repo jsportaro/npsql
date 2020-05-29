@@ -8,7 +8,6 @@
 
 #define UNUSED(expr) do { (void)(expr); } while (0)
 
-
 #define TYPE_INT_SIZE 4
 
 

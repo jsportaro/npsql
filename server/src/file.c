@@ -1,3 +1,4 @@
+#include <common.h>
 #include <file.h>
 
 #include <assert.h>
@@ -16,6 +17,8 @@ file_expand(int fd, off_t size)
 {
     int r = ftruncate(fd, size);
     assert(r == 0);
+
+    UNUSED(r);
 }
 
 off_t 
@@ -34,6 +37,8 @@ file_delete(const char *file_path)
     {
         int r = remove(file_path);
         assert(r != -1);
+
+        UNUSED(r);
     }
 }
 
@@ -42,6 +47,8 @@ file_close(int fd)
 {
     int r = close(fd);
     assert(r != -1);
+
+    UNUSED(r);
 }
 
 void 
@@ -53,6 +60,7 @@ file_read(int fd, void *buffer, uint32_t size, uint64_t page_offset, size_t *byt
 
     br = read(fd, buffer, size);
     assert(br == size);
+    UNUSED(br);
 
     if (bytes_read != NULL)
     {
@@ -66,7 +74,8 @@ file_write(int fd, void *buffer, uint32_t size, uint64_t page_offset, size_t *by
     uint32_t bw = 0;
     off_t s = lseek(fd, page_offset, SEEK_SET);
     assert(s != -1);
-
+    UNUSED(s);
+    
     bw = write(fd, buffer, size);
     assert(bw == size);
 
