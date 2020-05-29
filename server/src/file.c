@@ -26,7 +26,7 @@ file_size(int fd)
 {
     off_t s = lseek(fd, 0, SEEK_END);
     assert(s != -1);
-    UNUSED(S);
+    UNUSED(s);
 
     return s;
 }
