@@ -36,7 +36,7 @@ else()
 endif()
 
 set (COMMON_SOURCE
-    buffer.c
+    buffers.c
     buffer_manager.c
     common.c
     file.c

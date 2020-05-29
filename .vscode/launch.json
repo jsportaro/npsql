@@ -3,12 +3,13 @@
     "version": "0.2.0",
     "configurations": [
       {
+
         "name": "Debug",
         "type": "cppdbg",
         "request": "launch",
         "program": "${command:cmake.launchTargetPath}",
         "args": ["sample.data", "sample.log"],
-        "stopAtEntry": false,
+        "stopAtEntry": true,
         "cwd": "${workspaceFolder}",
         "environment": [],
         "externalConsole": false,

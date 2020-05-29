@@ -281,7 +281,7 @@ static void handle_query(struct session *session, size_t payload_size)
                 switch (field.type)
                 {
                     case TYPE_INT:
-                        htop32(field.value.number, &bytes);
+                        write_uint32(field.value.number, &bytes);
                         break;
                     default:
                         break;

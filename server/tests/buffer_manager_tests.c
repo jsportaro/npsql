@@ -7,9 +7,13 @@ int leak_check(void)
     buffer_manager_initialize(&bf);
 
     free_buffer_manager(&bf);
+
+    return 1;
 }
 
 int main(void)
 {
     leak_check();
+
+    return 1;
 }
