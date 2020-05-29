@@ -1,9 +1,11 @@
-add_executable(parser_test parser_test.c)
-add_executable(npsql_tests npsql_tests.c)
-add_executable(buffer_manager_tests buffer_manager_tests.c)
-add_executable(buffers_tests buffers_tests.c)
+function (ADD_BACKEND_TEST test_file test_name)
 
-target_link_libraries(buffers_tests PRIVATE backend)
-target_link_libraries(buffer_manager_tests PRIVATE backend)
-target_link_libraries(npsql_tests PRIVATE backend)
-target_link_libraries(parser_test PRIVATE backend)
+ADD_EXECUTABLE(${test_file} "${test_file}.c")
+TARGET_LINK_LIBRARIES(${test_file} backend Threads::Threads)	
+ADD_TEST(${test_name} ${test_file})
+
+endfunction()
+
+include_directories(.)
+
+ADD_BACKEND_TEST(log_file_tests log_file)
