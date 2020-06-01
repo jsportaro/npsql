@@ -49,6 +49,7 @@ set (COMMON_SOURCE
     planner.c
     sql.c 
     threads.c
+    wal.c
     ${PARSER_SOURCE}
     )
 

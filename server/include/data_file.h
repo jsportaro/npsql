@@ -23,8 +23,8 @@ struct data_file
     pthread_mutex_t *lock;
 };
 
-void data_file_open(struct data_file *data_file, const char *path);
-void data_file_close(struct data_file *data_file);
+void open_data_file(struct data_file *data_file, const char *path);
+void close_data_file(struct data_file *data_file);
 uint64_t page_count(struct data_file *data_file);
 void append_page(struct data_file *data_file, PNUM *page_number, uint8_t *page);
 void write_page(struct data_file *data_file, PNUM page_number, uint8_t *page);

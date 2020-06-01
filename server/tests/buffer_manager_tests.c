@@ -19,7 +19,7 @@ void should_find_previously_pinned_page()
     struct buffer *test_buffer = NULL;
     file_delete(data_path);
     file_delete(log_path);
-    data_file_open(&data_file, data_path);
+    open_data_file(&data_file, data_path);
     open_log_file(&log_file, log_path);
     buffer_manager_initialize(&buffer_manager, &data_file, &log_file);
 
@@ -29,9 +29,9 @@ void should_find_previously_pinned_page()
     flush_buffers(&buffer_manager, 1);
     
     close_log_file(&log_file);
-    data_file_close(&data_file);
+    close_data_file(&data_file);
     struct buffer_manager test_buffer_manager;
-    data_file_open(&data_file, data_path);
+    open_data_file(&data_file, data_path);
     open_log_file(&log_file, log_path);
     buffer_manager_initialize(&test_buffer_manager, &data_file, &log_file);
     
@@ -53,7 +53,7 @@ void should_get_n_th_pinned_page()
 
     file_delete(data_path);
     file_delete(log_path);
-    data_file_open(&data_file, data_path);
+    open_data_file(&data_file, data_path);
     open_log_file(&log_file, log_path);
 
     buffer_manager_initialize(&buffer_manager, &data_file, &log_file);
@@ -75,7 +75,7 @@ void should_get_n_th_pinned_page()
     assert(cmp_result == 0);
 
     close_log_file(&log_file);
-    data_file_close(&data_file);
+    close_data_file(&data_file);
 }
 
 void number_available_should_update()
@@ -88,7 +88,7 @@ void number_available_should_update()
 
     file_delete(data_path);
     file_delete(log_path);
-    data_file_open(&data_file, data_path);
+    open_data_file(&data_file, data_path);
     open_log_file(&log_file, log_path);
 
     buffer_manager_initialize(&buffer_manager, &data_file, &log_file);
@@ -121,7 +121,7 @@ void number_pins_should_update()
 
     file_delete(data_path);
     file_delete(log_path);
-    data_file_open(&data_file, data_path);
+    open_data_file(&data_file, data_path);
     open_log_file(&log_file, log_path);
 
     buffer_manager_initialize(&buffer_manager, &data_file, &log_file);
@@ -158,7 +158,7 @@ void buffer_manager_stress_test()
 
 	file_delete(data_path);
 	file_delete(log_path);
-	data_file_open(&data_file, data_path);
+	open_data_file(&data_file, data_path);
 	open_log_file(&log_file, log_path);
 
 	buffer_manager_initialize(&buffer_manager, &data_file, &log_file);

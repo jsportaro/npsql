@@ -1,4 +1,5 @@
 #include <buffers.h>
+#include <defaults.h>
 #include <nqp.h>
 #include <plans.h>
 #include <scans.h>
@@ -20,6 +21,8 @@
 #define COMPLETED_MESSAGE_OFFSET (HEADER_LENGTH + 3)
 
 #define COLUMN_MIN_LENGTH 5
+
+#define DEFAULT_ROW_BYTES 512
 
 enum completed_status
 {
@@ -274,6 +277,7 @@ static void handle_query(struct session *session, size_t payload_size)
             }
 
             vector_type(uint8_t) bytes = NULL;
+            vector_grow(bytes, MAX_MESSAGE_SIZE);
             vector_type(struct scan_field) fields = results->current_scan->scan_fields;
             for (size_t i = 0; i < vector_size(fields); i++)
             {
@@ -281,7 +285,7 @@ static void handle_query(struct session *session, size_t payload_size)
                 switch (field.type)
                 {
                     case TYPE_INT:
-                        push_uint32(field.value.number, &bytes);
+                        push_uint32(bytes, field.value.number);
                         break;
                     default:
                         break;

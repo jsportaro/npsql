@@ -84,6 +84,4 @@
 		vector_set_size((vec), vector_size(vec) + 1);                          \
 	} while (0)
 
-
-
 #endif

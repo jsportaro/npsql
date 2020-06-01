@@ -118,7 +118,7 @@ unpin(struct buffer_manager *bm, struct buffer *b)
 }
 
 void 
-flush_buffers(struct buffer_manager *bm, TSX_NUM tsx)
+flush_buffers(struct buffer_manager *bm, TSXID tsx)
 {
     lock(bm->lock);
 
@@ -134,7 +134,7 @@ flush_buffers(struct buffer_manager *bm, TSX_NUM tsx)
 }
 
 void 
-write_buffer(struct buffer *buffer, void *update, uint16_t offset, size_t length, TSX_NUM tsx, LSN lsn)
+write_buffer(struct buffer *buffer, void *update, uint16_t offset, size_t length, TSXID tsx, LSN lsn)
 {
     buffer->modified_by = tsx;
 

@@ -69,7 +69,7 @@ append(struct log_file *lf, void* r, size_t s)
     
     memcpy(&(lf->current_page[lf->current_page_position]), r, s);
     lf->current_page_position += (uint16_t)s;
-    write_uint16(get_last_record_position(lf->current_page), lf->current_page, lf->current_page_position);
+    write_uint16(lf->current_page, lf->current_page_position, get_last_record_position(lf->current_page));
     set_last_record_position(lf->current_page_position, lf->current_page);
 
     lf->current_page_position += sizeof(uint16_t);
@@ -130,7 +130,7 @@ next(struct log_file_iterator *lfi)
 static void 
 set_last_record_position(uint16_t position, uint8_t *page)
 {
-    write_uint16(position, page, 0);
+    write_uint16(page, 0, position);
 }
 
 static uint16_t 

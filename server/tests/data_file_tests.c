@@ -27,7 +27,7 @@ create_data_file(struct data_file *data_file, const char *path, const uint64_t p
     PNUM page_number = 0;
     
     file_delete(path);
-    data_file_open(data_file, path);
+    open_data_file(data_file, path);
 
     for (uint64_t i = 0; i < pages; i++)
     {
@@ -37,6 +37,8 @@ create_data_file(struct data_file *data_file, const char *path, const uint64_t p
          append_page(data_file, &page_number, page);
          free(page);
     }
+
+    close_data_file(data_file);
 }
 
 void
@@ -51,7 +53,7 @@ append_page_on_new_file()
 
     assert(actual_size == PAGE_SIZE);
 
-    data_file_close(&test_data_file);
+    close_data_file(&test_data_file);
 }
 
 void
@@ -69,19 +71,19 @@ append_page_on_existing_file()
     page = allocate_page();
     page_number = 0;
 
-    data_file_open(&test_data_file, path);
+    open_data_file(&test_data_file, path);
     append_page(&test_data_file, &page_number, page);
     actual_size = file_size(test_data_file.file);
-    data_file_close(&test_data_file);
+    close_data_file(&test_data_file);
     free(page);
 
     // Re-open file and append again
     page = allocate_page();
     page_number = 0;
-    data_file_open(&test_data_file, path);
+    open_data_file(&test_data_file, path);
     append_page(&test_data_file, &page_number, page);
     actual_size = file_size(test_data_file.file);
-    data_file_close(&test_data_file);
+    close_data_file(&test_data_file);
     free(page); 
     
     assert(page_number == 1);
@@ -102,7 +104,7 @@ read_page_to_buffer()
     assert(page[0] == 'h');
 
     free(page);
-    data_file_close(&test_data_file);
+    close_data_file(&test_data_file);
 }
 
 void
@@ -122,17 +124,17 @@ write_page_to_file()
     write_page(&test_data_file, 2, page);
     free(page);
     
-    data_file_close(&test_data_file);
+    close_data_file(&test_data_file);
 
     //  Now, open file back up to see if changes persisted
-    data_file_open(&actual_file, path);
+    open_data_file(&actual_file, path);
     page = allocate_page();
     read_page(&actual_file, 2, page);
 
     assert(page[0] == 'j');  // Do we have jello?
 
     free(page);
-    data_file_close(&actual_file);
+    close_data_file(&actual_file);
 }
 
 void
@@ -148,7 +150,7 @@ should_return_next_page_number()
     
     assert(expected_page_number == actual_page_number);
 
-    data_file_close(&test_data_file);
+    close_data_file(&test_data_file);
 }
 
 int main(void)

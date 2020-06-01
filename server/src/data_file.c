@@ -3,7 +3,7 @@
 #include <threads.h>
 
 void 
-data_file_open(struct data_file *df, const char *path)
+open_data_file(struct data_file *df, const char *path)
 {
     df->file = file_open(path);
     df->size = file_size(df->file);
@@ -13,7 +13,7 @@ data_file_open(struct data_file *df, const char *path)
 }
 
 void 
-data_file_close(struct data_file *df)
+close_data_file(struct data_file *df)
 {
     destroy_mutex(df->lock);
     file_close(df->file);

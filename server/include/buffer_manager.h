@@ -19,7 +19,7 @@ struct buffer
     uint16_t id;
     uint16_t pins;
     PNUM     page_number;
-    TSX_NUM  modified_by;
+    TSXID    modified_by;
     LSN      lsn;
     uint8_t  *page;
 
@@ -47,7 +47,7 @@ void free_buffer_manager(struct buffer_manager *buffer_manager);
 struct buffer *pin(struct buffer_manager *buffer_manager, PNUM page_number);
 struct buffer *pin_new(struct buffer_manager *buffer_manager);
 void unpin(struct buffer_manager *buffer_manager, struct buffer *buffer);
-void flush_buffers(struct buffer_manager *buffer_manager, TSX_NUM tsx);
-void write_buffer(struct buffer *buffer, void *update, uint16_t offset, size_t length, TSX_NUM tsx, LSN lsn);
+void flush_buffers(struct buffer_manager *buffer_manager, TSXID tsx);
+void write_buffer(struct buffer *buffer, void *update, uint16_t offset, size_t length, TSXID tsx, LSN lsn);
 
 #endif

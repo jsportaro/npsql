@@ -12,7 +12,7 @@
 
 typedef uint64_t PNUM;
 typedef uint64_t LSN;
-typedef uint32_t TSX_NUM;
+typedef uint32_t TSXID;
 typedef uint16_t RECORD_HANDLE;
 
 #endif
