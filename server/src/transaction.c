@@ -13,7 +13,6 @@ initialize_transaction_context(
     open_log_file(&transaction_manager->log_file, log_file_path);
     buffer_manager_initialize(&transaction_manager->buffer_manager, &transaction_manager->data_file, &transaction_manager->log_file);
 
-
     transaction_manager->count_lock = create_mutex();
 }
 

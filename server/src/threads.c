@@ -61,3 +61,8 @@ void release_thread(gpsql_thread *thread)
 {
     free(thread);
 }
+
+void wait_till(uint32_t milliseconds)
+{
+    usleep(milliseconds * 1000);
+}

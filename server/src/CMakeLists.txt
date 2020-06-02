@@ -41,6 +41,7 @@ set (COMMON_SOURCE
     common.c
     data_file.c
     file.c
+    lock_table.c
     log_file.c
     nqp.c
     npsql.c

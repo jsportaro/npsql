@@ -38,7 +38,7 @@ void should_find_previously_pinned_page()
     //  Now, get that buffer back and test to make sure things 
     //  were written correclty
     test_buffer = pin(&buffer_manager, 0);
-    int cmp_result = strncmp(name, test_buffer->page, strlen(name));
+    int cmp_result = strncmp(name, (char *)test_buffer->page, strlen(name));
 
     assert(cmp_result == 0);
 }
@@ -70,7 +70,7 @@ void should_get_n_th_pinned_page()
 
     struct buffer *pinned_buffer = pin(&buffer_manager, 2);
 
-    int cmp_result = strncmp(name[2], pinned_buffer->page, strlen(name[2]));
+    int cmp_result = strncmp(name[2], (char *)pinned_buffer->page, strlen(name[2]));
 
     assert(cmp_result == 0);
 
