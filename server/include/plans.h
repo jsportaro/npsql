@@ -3,22 +3,8 @@
 
 #include <scans.h>
 #include <sql.h>
+#include <storage.h>
 #include <vector.h>
-
-// Maybe the following two decs 
-// go into storage.h?
-enum column_type
-{
-    TYPE_INT,
-    TYPE_CHAR
-};
-
-struct column
-{
-    vector_type(char) name;
-    enum column_type type;
-    uint16_t size;
-};
 
 enum plan_type
 {

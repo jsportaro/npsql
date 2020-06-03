@@ -23,7 +23,7 @@ allocate_page(void)
 void 
 create_data_file(struct data_file *data_file, const char *path, const uint64_t pages)
 {
-    struct data_page *page = NULL;
+    uint8_t *page = NULL;
     PNUM page_number = 0;
     
     file_delete(path);

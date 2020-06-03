@@ -10,14 +10,6 @@
 
 #define TYPE_INT_SIZE 4
 
-
-struct byte_buffer
-{
-    uint8_t *bytes;
-    size_t length;
-};
-
-
 void uuid_string(uint8_t *uuid, char *string);
 void htops(const int16_t value, uint8_t *buffer);
 void htopi(const int32_t value, uint8_t *buffer);
