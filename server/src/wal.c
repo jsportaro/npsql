@@ -10,11 +10,13 @@
 
 #define RECORD_HEADER_LENGTH 5
 
+// WAL Record Layout
+// | 0  1  2  3  4  5  6  7  8  |  9  10 11 12  |  13 14 15 16 ...
+// |            PNUM            |  PAGE OFFSET  |  UPDATE DATA ...
 #define WAL_PNUM_POS        0
 #define WAL_PAGE_OFFSET_POS 8
 #define WAL_LENGTH_POS      10
-#define WAL_REC_PAYLOAD_POS(off) \
-    ((off) + WAL_PNUM_POS + WAL_PAGE_OFFSET_POS + WAL_LENGTH_POS)
+#define WAL_REC_PAYLOAD_POS(off) ((off) + 12)
 #define WAL_UPDATE_REC_LEN(s)   \
     RECORD_HEADER_LENGTH + WAL_PNUM_POS + WAL_PAGE_OFFSET_POS + WAL_LENGTH_POS + (s)
 

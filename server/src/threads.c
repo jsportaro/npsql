@@ -1,6 +1,8 @@
 #include <common.h>
 #include <threads.h>
 
+#include <assert.h>
+
 struct gpsql_thread_linux
 {
     pthread_t pthread;
@@ -11,6 +13,8 @@ pthread_mutex_t *
 create_mutex()
 {
     pthread_mutex_t *lock = malloc(sizeof(pthread_mutex_t)); 
+
+    assert(lock != NULL);
 
     pthread_mutex_init(lock, NULL);
 
@@ -33,6 +37,46 @@ void
 unlock(pthread_mutex_t *m)
 {
     pthread_mutex_unlock(m); 
+}
+
+struct event *
+create_event()
+{
+    struct event *event = malloc(sizeof(struct event));
+
+    assert(event != NULL);
+
+    pthread_mutex_init(&event->mutex, NULL);
+    pthread_cond_init(&event->condition, NULL);
+    event->flag = 0;
+
+    return event;
+}
+
+void 
+event_set(struct event *e)
+{
+    pthread_mutex_lock(&e->mutex);
+    e->flag = 1;
+    pthread_cond_signal(&e->condition);
+    pthread_mutex_unlock(&e->mutex);
+}
+
+void event_wait(struct event *e)
+{
+    pthread_mutex_lock(&e->mutex);
+
+    while (!e->flag)
+        pthread_cond_wait(&e->condition, &e->mutex);
+
+    e->flag = 0;
+
+    pthread_mutex_unlock(&e->mutex);
+}
+
+void destroy_event(struct event *e)
+{
+    free(e);
 }
 
 gpsql_thread create_thread(gpsql_thread_func func, void *args)

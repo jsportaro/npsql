@@ -50,6 +50,7 @@ set (COMMON_SOURCE
     planner.c
     sql.c 
     threads.c
+    transaction.c
     wal.c
     ${PARSER_SOURCE}
     )
