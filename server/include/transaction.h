@@ -1,6 +1,7 @@
 #ifndef __TRANSACTION_H__
 #define __TRANSACTION_H__
 
+#include <buffer_manager.h>
 #include <data_file.h>
 #include <log_file.h>
 #include <lock_table.h>

@@ -21,9 +21,9 @@ bind_column(struct expr *expr)
     struct column r;
     struct column lr, rr;
 
-    r.name = NULL;
+    r.name   = NULL;
     r.size = 0;
-    r.type = TYPE_INT;
+    r.type   = TYPE_INT;
     
     switch(expr->type)
     {

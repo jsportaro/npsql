@@ -40,7 +40,9 @@ set (COMMON_SOURCE
     buffer_manager.c
     common.c
     data_file.c
+    data_page.c
     file.c
+    heap_table.c
     lock_table.c
     log_file.c
     nqp.c
@@ -48,6 +50,7 @@ set (COMMON_SOURCE
     plans.c
     scans.c
     planner.c
+    storage.c
     sql.c 
     threads.c
     transaction.c
