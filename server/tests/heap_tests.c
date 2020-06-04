@@ -16,23 +16,23 @@ single_table_page_write_read()
 {
     const char *data_path = "single_table_page_write_read.dat";
     const char *log_path = "single_table_page_write_read.log";
-    struct transaction_context ctx;
-    struct data_page page, existing_page;
-    
+    struct transaction_context ctx = { 0 };
+    struct data_page page = { 0 };
+    struct data_page existing_page = { 0 };
+
     file_delete(data_path);
     file_delete(log_path);
 
     initialize_transaction_context(&ctx, data_path, log_path);
     PNUM page_number = INVALID_PNUM;
 
-    struct table_info people;
-
+    struct table_info people = { 0 };
     init_table_info(&people);
 
     add_char(&people, "name", 4, 15);
     add_int(&people, "age", 3);
-
-    struct transaction *tsx = begin_transaction(&ctx);
+    struct transaction *tsx = NULL;
+    tsx = begin_transaction(&ctx);
     {
         page_number = new_data_page(&page, &people, tsx);
 
@@ -82,6 +82,9 @@ single_table_page_write_read()
 
         commit(tsx);
     }
+
+    free_transaction_context(&ctx);
+    free_table_info(&people);
 }
 
 void
@@ -89,7 +92,7 @@ complete_table()
 {
     const char *data_path = "complete_table.dat";
     const char *log_path = "complete_table.log";
-    struct transaction_context ctx;
+    struct transaction_context ctx = { 0 };
     
     file_delete(data_path);
     file_delete(log_path);
@@ -97,7 +100,7 @@ complete_table()
     initialize_transaction_context(&ctx, data_path, log_path);
     PNUM page_number = INVALID_PNUM;
 
-    struct table_info people_info;
+    struct table_info people_info = { 0 };
 
     init_table_info(&people_info);
 
@@ -107,7 +110,7 @@ complete_table()
     int written = 0;
     struct transaction *write_tsx = begin_transaction(&ctx);
     {
-        struct heap_table people;
+        struct heap_table people = { 0 };
 
         create_heap_table(&people, &people_info, write_tsx);
 
@@ -133,19 +136,19 @@ complete_table()
         open_heap_table(&read_table, &people_info, read_tsx, 0);
         open_heap_iterator(&read_table, &iterator);
 
-        int age;
-        char name[16];
+        int age = 0;
+        char name[16] = { 0 };
 
         while (next_record(&iterator))
         {
             struct record_id current_rid = iterator.current_record;
 
             get_int(&read_table, current_rid, "age", &age);
-            printf("Age: %d\n", age);
+            //printf("Age: %d\n", age);
 
             get_char(&read_table, current_rid, "name", name);
             name[15] = '\0';
-            printf("Age : %s\n\n", name);
+            //printf("Age : %s\n\n", name);
 
             read++;
         }
@@ -154,6 +157,9 @@ complete_table()
     }
 
     assert(written == read);
+
+    free_transaction_context(&ctx);
+    free_table_info(&people_info);
 }
 
 int main(void)

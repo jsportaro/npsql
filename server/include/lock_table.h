@@ -22,6 +22,7 @@ struct lock_table
 };
 
 void create_lock_table(struct lock_table *lock_table);
+void free_lock_table(struct lock_table *lock_table);
 void slock(struct lock_table *lock_table, PNUM page_number);
 void xlock(struct lock_table* lock_table, PNUM page_number);
 void release(struct lock_table *ls, PNUM pnum);

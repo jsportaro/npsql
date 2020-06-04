@@ -19,6 +19,12 @@ create_lock_table(struct lock_table *lt)
     lt->locks = NULL;
 }
 
+void free_lock_table(struct lock_table *lock_table)
+{
+    vector_free(lock_table->locks);
+    destroy_mutex(lock_table->m);
+}
+
 void 
 slock(struct lock_table *lt, PNUM pnum)
 {

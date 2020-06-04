@@ -46,6 +46,8 @@ void initialize_transaction_context(
     const char *data_file_path, 
     const char *log_file_path);
 
+void free_transaction_context(struct transaction_context *ctx);
+
 struct transaction * begin_transaction(struct transaction_context *context);
 void commit(struct transaction *transaction);
 void rollback(struct transaction *transaction);

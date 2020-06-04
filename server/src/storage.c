@@ -51,6 +51,4 @@ void free_table_info(struct table_info *table)
     {
         free(table->columns[i].name);
     }
-
-    free(table);
 }

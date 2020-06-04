@@ -41,6 +41,16 @@ initialize_transaction_context(
     ctx->tsxid_lock = create_mutex();
 }
 
+void 
+free_transaction_context(struct transaction_context *ctx)
+{
+    destroy_mutex(ctx->tsxid_lock);
+    free_lock_table(&ctx->locks);
+    free_buffer_manager(&ctx->bmgr);
+    close_log_file(&ctx->log);
+    close_data_file(&ctx->data);
+}
+
 struct transaction*  
 begin_transaction(struct transaction_context *context)
 {

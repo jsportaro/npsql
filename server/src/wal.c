@@ -78,6 +78,7 @@ wal_write(struct wal_writer *wal, PNUM pnum, uint16_t offset, void* old, size_t 
 
     vector_type(uint8_t) update_record = NULL;
     vector_grow(update_record, record_length);
+    
     LSN commit_lsn = INVALID_LSN;
 
     vector_push(update_record, LOG_UPDATE);
@@ -88,6 +89,8 @@ wal_write(struct wal_writer *wal, PNUM pnum, uint16_t offset, void* old, size_t 
     push_cpy(update_record, old, length);
 
     commit_lsn = append(wal->log, update_record, record_length);
+
+    vector_free(update_record);
 
     return commit_lsn;
 }
