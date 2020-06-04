@@ -4,6 +4,8 @@
 #include <assert.h> 
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 // Taken from https://github.com/eteran/c-vector
 // I just updated the formatting
@@ -54,6 +56,7 @@
         if (!(vec)) {                                                          \
             size_t *__new_vector = malloc(__new_size);                         \
             assert(__new_vector);                                              \
+            memset(__new_vector, 0, __new_size);                               \
             (vec) = (void *)(&__new_vector[2]);                                \
             vector_set_capacity((vec), (count));                               \
             vector_set_size((vec), (0));                                       \

@@ -165,7 +165,7 @@ complete_table()
 int main(void)
 {
     single_table_page_write_read();
-    complete_table();
+    //complete_table();
 
     return EXIT_SUCCESS;
 
