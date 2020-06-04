@@ -41,11 +41,9 @@ open_heap_table(struct heap_table *table, struct table_info *table_info, struct 
 struct record_id 
 heap_insert(struct heap_table *table)
 {
-    struct data_page page;
     struct am_scan_result result;
     uint16_t am_scan_staring_index = 0;
 
-    page.header.slot_count = 0;
     PNUM current_am_pid = table->am_entry_pid;
 
 am_scan_here_i_am:
