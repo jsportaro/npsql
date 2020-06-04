@@ -25,7 +25,7 @@ struct plan * create_select_plan(struct select *select)
     // Handle not data special case
     if (select->table_refs == NULL)
     {
-        plan = create_no_data_select_plan(select);
+        plan = new_no_data_select_plan(select);
     }
 
     return plan;

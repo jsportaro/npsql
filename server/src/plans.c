@@ -88,7 +88,7 @@ bind_columns(struct select *select)
 }
 
 struct plan * 
-create_no_data_select_plan(struct select *select)
+new_no_data_select_plan(struct select *select)
 {
     struct plan_project *p = malloc(sizeof(struct plan_project));
 

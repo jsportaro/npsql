@@ -8,10 +8,17 @@
 
 enum plan_type
 {
-    PLAN_PROJECT
+    PLAN_PROJECT,
+    CREATE_TABLE
 };
 
 struct plan
+{
+    enum plan_type type;
+    struct scan *(*open)(struct plan *plan);
+};
+
+struct plan_query
 {
     enum plan_type type;
     struct scan *(*open)(struct plan *plan);
@@ -26,7 +33,8 @@ struct plan_project
     vector_type(struct expr *) expr_list;
 };
 
-struct plan * create_no_data_select_plan(struct select *select);
+struct plan * new_no_data_select_plan(struct select *select);
+struct plan * new_create_table_plan(struct create_table *create_table);
 void free_plan(struct plan *plan);
 
 #endif

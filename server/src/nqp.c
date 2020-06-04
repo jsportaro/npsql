@@ -200,30 +200,35 @@ static void say_columns(struct session *session, struct query_results *results)
     vector_push(column_bytes, 0x00);
 
     // Payload
-    vector_type(struct column) columns = results->current_plan->column_list;
-
-    for (size_t i = 0; i < vector_size(columns); i++)
+    vector_type(struct column) columns = NULL;
+    
+    if (results->current_plan->type == PLAN_PROJECT)
     {
-        struct column col = columns[i];
-        long start_size = vector_size(column_bytes);
-        uint16_t length = COLUMN_MIN_LENGTH + vector_size(col.name);
-        
-        vector_grow(column_bytes, length  + start_size);
+        columns = ((struct plan_query *)results->current_plan)->column_list;
+    
+        for (size_t i = 0; i < vector_size(columns); i++)
+        {
+            struct column col = columns[i];
+            long start_size = vector_size(column_bytes);
+            uint16_t length = COLUMN_MIN_LENGTH + vector_size(col.name);
+            
+            vector_grow(column_bytes, length  + start_size);
 
-        uint8_t *column_start = &column_bytes[start_size];
+            uint8_t *column_start = &column_bytes[start_size];
 
-        column_start[0] = (uint8_t)col.type;                         //  Column Type
-        htops((uint16_t)col.size, &column_start[1]);                 //  Column Type Size (# bytes)
-        htops((uint16_t)vector_size(col.name), &column_start[3]);          //  Name Size (# bytes)
-        memcpy(&column_start[5], col.name, vector_size(col.name));  //  Name 
+            column_start[0] = (uint8_t)col.type;                         //  Column Type
+            htops((uint16_t)col.size, &column_start[1]);                 //  Column Type Size (# bytes)
+            htops((uint16_t)vector_size(col.name), &column_start[3]);          //  Name Size (# bytes)
+            memcpy(&column_start[5], col.name, vector_size(col.name));  //  Name 
 
-        vector_set_size(column_bytes, length + start_size);
+            vector_set_size(column_bytes, length + start_size);
+        }
+
+        htops((uint16_t)vector_size(column_bytes) - HEADER_LENGTH, &column_bytes[1]);
+        send_buffer(session->socket, column_bytes, vector_size(column_bytes));
+        vector_free(column_bytes);
+        column_bytes = NULL;
     }
-
-    htops((uint16_t)vector_size(column_bytes) - HEADER_LENGTH, &column_bytes[1]);
-    send_buffer(session->socket, column_bytes, vector_size(column_bytes));
-    vector_free(column_bytes);
-    column_bytes = NULL;
 }
 
 static uint8_t * new_rowset_buffer()

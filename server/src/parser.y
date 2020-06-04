@@ -31,9 +31,13 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 %token <const char *>   IDENTIFIER "identifier"
 %token <const char *>   OPERATOR   "operator"
 
+%left COMPARISON
 %left '+' '-'
 %left '*' '/'
 
+%token INT
+%token CREATE
+%token TABLE
 %token SELECT
 %token FROM
 %token WHERE
@@ -41,14 +45,16 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 %token OR
 %token COMPARISON 
 
-%type <struct sql_stmt *> stmt select_stmt
+%type <struct sql_stmt *> stmt select_stmt create_table_stmt
 %type <vector_type(struct expr *)> select_expr_list
 %type <vector_type(struct table_ref *)> table_references
+%type <vector_type(struct column_def *)> create_col_list
 %type <struct table_ref *> table_reference
 %type <struct expr *> select_expr
 %type <struct expr *> expr
 %type <struct expr *> opt_where
-
+%type <struct column_def *> create_def
+%type <struct type_def *> data_type
 %start stmt_list;
 
 %%
@@ -60,6 +66,7 @@ stmt_list:
 
 stmt: 
     select_stmt                      { $$ = $1; }     
+  | create_table_stmt                { $$ = $1; }
 ;
 
 select_stmt: 
@@ -98,11 +105,30 @@ expr:
 ;
 
 expr: 
-    expr '+' expr        { $$ = new_infix_expr(EXPR_ADD, $1, $3); }
-  | expr '-' expr        { $$ = new_infix_expr(EXPR_SUB, $1, $3); }
-  | expr '*' expr        { $$ = new_infix_expr(EXPR_MUL, $1, $3); }
-  | expr '/' expr        { $$ = new_infix_expr(EXPR_DIV, $1, $3); }
-  | expr COMPARISON expr { $$ = new_infix_expr(EXPR_COMPARISON, $1, $3); }
+    expr '+' expr                    { $$ = new_infix_expr(EXPR_ADD, $1, $3); }
+  | expr '-' expr                    { $$ = new_infix_expr(EXPR_SUB, $1, $3); }
+  | expr '*' expr                    { $$ = new_infix_expr(EXPR_MUL, $1, $3); }
+  | expr '/' expr                    { $$ = new_infix_expr(EXPR_DIV, $1, $3); }
+  | expr COMPARISON expr             { $$ = new_infix_expr(EXPR_COMPARISON, $1, $3); }
+;
+
+create_table_stmt:
+    CREATE TABLE 
+    "identifier" 
+    '(' create_col_list  ')'         { $$ = new_create_table($3, $5); }
+;
+
+create_col_list: 
+    create_def                       { $$ = new_column_def_list($1);          }
+  | create_col_list ',' create_def   { $$ = append_column_def_list($1, $3);   } 
+;
+
+create_def:
+    "identifier" data_type           { $$ = create_column_def($1, $2); }
+;
+
+data_type:
+    INT                              { $$ = create_type_def(1); }
 ;
 
 %%

@@ -8,7 +8,8 @@
 
 enum stmt_type
 {
-    STMT_SELECT
+    STMT_SELECT,
+    STMT_CREATE_TABLE
 };
 
 struct sql_stmt
@@ -67,6 +68,23 @@ struct select
     struct expr *where;
 };
 
+struct create_table
+{
+    enum stmt_type type;
+    char *table_name;
+};
+
+struct type_def
+{
+    int i;
+};
+
+struct column_def
+{
+    char *name;
+    struct type_def *type;
+};
+
 struct sql_stmts
 {
     vector_type(struct sql_stmts *) stmts;
@@ -82,12 +100,12 @@ struct parsed_sql
 
 void append_stmt(vector_type(struct sql_stmt *) stmt_list, struct sql_stmt * stmt);
 
-struct sql_stmt *new_select_data(
+struct sql_stmt * new_select_data(
     vector_type(struct expr *) expr_list, 
     vector_type(struct table_ref *) table_refs, 
     struct expr *where);
 
-struct sql_stmt *new_select(vector_type(struct expr *) expr_list);
+struct sql_stmt * new_select(vector_type(struct expr *) expr_list);
 
 vector_type(struct expr *) new_expr_list(struct expr *expr);
 vector_type(struct expr *) append_expr_list(vector_type(struct expr *) expr_list, struct expr *expr);
@@ -97,6 +115,12 @@ struct table_ref * new_table_ref(const char *name);
 
 struct expr * new_term_expr(enum expr_type type, const void *v);
 struct expr * new_infix_expr(enum expr_type type, struct expr *l, struct expr *r);
+
+struct sql_stmt * new_create_table(const char *name, vector_type(struct column_def *) column_defs);
+vector_type(struct column_def *) new_column_def_list(struct column_def *column_def);
+vector_type(struct column_def *) append_column_def_list(vector_type(struct column_def *) column_def_list, struct column_def *column_def);
+struct column_def * create_column_def(const char *name,  struct type_def *i);
+struct type_def * create_type_def(int i);
 
 void free_stmts(struct parsed_sql * parsed);
 

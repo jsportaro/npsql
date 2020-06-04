@@ -125,8 +125,57 @@ new_infix_expr(enum expr_type type, struct expr *l, struct expr *r)
     return (struct expr *)expr;
 }
 
+struct sql_stmt * 
+new_create_table(const char *name, vector_type(struct column_def *) column_defs)
+{
+    UNUSED(column_defs);
+
+    struct create_table *ct = malloc(sizeof(struct create_table));
+    size_t l = strlen(name);
+    ct->type = STMT_CREATE_TABLE;
+    ct->table_name = NULL;
+    ct->table_name = malloc(l + 1);
+    ct->table_name[l + 1] = '\0';
+    strcpy(ct->table_name, name);
+
+    return (struct sql_stmt *)ct;
+}
+
+vector_type(struct column_def *) 
+new_column_def_list(struct column_def *column_def)
+{
+    UNUSED(column_def);
+
+    return NULL;
+}
+
+vector_type(struct column_def *) 
+append_column_def_list(vector_type(struct column_def *) column_def_list, struct column_def *column_def)
+{
+    UNUSED(column_def_list);
+    UNUSED(column_def);
+
+    return NULL;
+}
+
+struct column_def * 
+create_column_def(const char *name, struct type_def *i)
+{
+    UNUSED(name);
+    UNUSED(i);
+
+    return NULL;
+}
+
+struct type_def * 
+create_type_def(int i)
+{
+    UNUSED(i);
+    return NULL;
+}
 
 void free_select(struct select *select);
+void free_create_table(struct create_table *create_table);
 void free_table_ref(struct table_ref *table_ref);
 void free_expr(struct expr *expr);
 
@@ -139,6 +188,9 @@ free_stmts(struct parsed_sql * parsed)
         {
             case STMT_SELECT:
                 free_select((struct select *)parsed->stmts[i]);
+                break;
+            case STMT_CREATE_TABLE:
+                free_create_table((struct create_table *)parsed->stmts[i]);
                 break;
         }
 
@@ -171,12 +223,19 @@ free_select(struct select * select)
     {
         free_expr(select->where);
     }
+
     vector_free(select->expr_list);
     vector_free(select->table_refs);
 
     select->expr_list = NULL;
     select->table_refs = NULL;
     select->where = NULL;
+}
+
+void
+free_create_table(struct create_table *create_table)
+{
+    free(create_table->table_name);
 }
 
 void 

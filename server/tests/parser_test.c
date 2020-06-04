@@ -64,10 +64,10 @@ void test_all_the_things()
 }
 int main(void)
 {   
-    //test_no_data_select();
-    //test_select_table_ref();
-    //test_select_table_ref_where();
-    //test_parse_error();
+    test_no_data_select();
+    test_select_table_ref();
+    test_select_table_ref_where();
+    test_parse_error();
     test_all_the_things();
     exit(EXIT_SUCCESS);
 }

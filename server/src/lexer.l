@@ -15,11 +15,14 @@ operators [-+&~|^/%*(),.;!]
 
 %%
 
+AND         { return AND;    }
+CREATE	    { return CREATE; }
 SELECT      { return SELECT; }
 FROM        { return FROM;   }
-WHERE       { return WHERE;  }
-AND         { return AND;    }
+INT         { return INT;    }
 OR          { return OR;     }
+TABLE       { return TABLE;  }
+WHERE       { return WHERE;  }
  
 {int}       { yylval->INTNUM = atol(yytext); return INTNUM; }
  

@@ -2,6 +2,7 @@
 #define __HEAP_TABLE_H__
 
 #include <data_file.h>
+#include <data_page.h>
 #include <storage.h>
 #include <transaction.h>
 

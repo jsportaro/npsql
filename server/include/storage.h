@@ -6,6 +6,8 @@
 #include <stdint.h>
 
 #define PAGE_SIZE       0x200
+#define MAX_OBJECT_NAME 15
+#define MAX_TABLE_NAME  MAX_OBJECT_NAME
 #define MAX_COLUMN_NAME 25
 #define MAX_COLUMNS     16 
 #define HEADER_OFFSET   0
@@ -46,6 +48,7 @@ struct table_info
     uint16_t column_count;
 };
 
+// these might belong in the syscat 
 void init_table_info(struct table_info *table);
 void add_int(struct table_info *table, const char *name, const uint16_t name_length);
 void add_char(struct table_info *table, const char *name, const uint16_t name_length, uint16_t size);

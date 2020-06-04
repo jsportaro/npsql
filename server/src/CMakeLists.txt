@@ -11,7 +11,8 @@ if(WithBison)
 
     BISON_TARGET(
         npsql_parser parser.y 
-        ${CMAKE_BINARY_DIR}/codegen/parser.gen.c)
+        ${CMAKE_BINARY_DIR}/codegen/parser.gen.c
+        COMPILE_FLAGS -Wconflicts-sr)
     
     FLEX_TARGET(
         npsql_lexer lexer.l 
@@ -52,6 +53,7 @@ set (COMMON_SOURCE
     planner.c
     storage.c
     sql.c 
+    syscat.c
     threads.c
     transaction.c
     wal.c
