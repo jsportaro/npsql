@@ -17,7 +17,7 @@ if(WithBison)
     FLEX_TARGET(
         npsql_lexer lexer.l 
         ${CMAKE_BINARY_DIR}/codegen/lexer.gen.c COMPILE_FLAGS 
-        --header-file=${CMAKE_BINARY_DIR}/codegen/lexer.gen.h COMPILE_FLAGS  --debug)
+        --header-file=${CMAKE_BINARY_DIR}/codegen/lexer.gen.h COMPILE_FLAGS)
     
     ADD_FLEX_BISON_DEPENDENCY(npsql_lexer npsql_parser)
 
