@@ -14,7 +14,8 @@
         "string_view": "c",
         "initializer_list": "c",
         "utility": "c",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "create_table.h": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

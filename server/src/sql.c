@@ -1,6 +1,7 @@
 #include <common.h>
 #include <sql.h>
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -15,6 +16,9 @@ struct sql_stmt *new_select
 (vector_type(struct expr *) expr_list)
 {
     struct select *select = malloc(sizeof(struct select));
+
+    assert(select != NULL);
+
 
     select->expr_list = NULL;
     select->table_refs = NULL;
@@ -32,7 +36,9 @@ new_select_data(
     vector_type(struct table_ref *) table_refs, 
     struct expr *where)
 {
-     struct select *select = malloc(sizeof(struct select));
+    struct select *select = malloc(sizeof(struct select));
+
+    assert(select != NULL);
 
     select->expr_list = NULL;
     select->table_refs = NULL;
@@ -51,7 +57,10 @@ new_expr_list(struct expr *expr)
 {
     vector_type(struct expr *) expr_list = NULL;
 
-    vector_push(expr_list, expr);
+    if (expr != NULL)
+    {
+        vector_push(expr_list, expr);
+    }
 
     return expr_list;
 }
@@ -69,10 +78,9 @@ new_table_ref(const char *name)
 {
     struct table_ref * table_ref = malloc(sizeof(struct table_ref));
 
-    table_ref->table_name = NULL;
+    assert(table_ref != NULL);
 
-    table_ref->table_name = malloc(strlen(name) + 1);
-    strcpy(table_ref->table_name, name);
+    table_ref->table_name = name;
 
     return table_ref;
 }
@@ -92,6 +100,8 @@ new_term_expr(enum expr_type type, const void *v)
 {
     struct term_expr *expr = (struct term_expr *) malloc(sizeof(struct term_expr));
     
+    assert(expr != NULL);
+
     expr->type = type;
     expr->value.string = NULL;
 
@@ -115,6 +125,8 @@ new_infix_expr(enum expr_type type, struct expr *l, struct expr *r)
 {
     struct infix_expr *expr = malloc(sizeof(struct infix_expr));
 
+    assert(expr != NULL);
+
     expr->l = NULL;
     expr->r = NULL;
 
@@ -128,15 +140,13 @@ new_infix_expr(enum expr_type type, struct expr *l, struct expr *r)
 struct sql_stmt * 
 new_create_table(const char *name, vector_type(struct column_def *) column_defs)
 {
-    UNUSED(column_defs);
-
     struct create_table *ct = malloc(sizeof(struct create_table));
-    size_t l = strlen(name);
+
+    assert(ct != NULL);
+
     ct->type = STMT_CREATE_TABLE;
-    ct->table_name = NULL;
-    ct->table_name = malloc(l + 1);
-    ct->table_name[l + 1] = '\0';
-    strcpy(ct->table_name, name);
+    ct->table_name = name;
+    ct->column_defs = column_defs;
 
     return (struct sql_stmt *)ct;
 }
@@ -144,39 +154,51 @@ new_create_table(const char *name, vector_type(struct column_def *) column_defs)
 vector_type(struct column_def *) 
 new_column_def_list(struct column_def *column_def)
 {
-    UNUSED(column_def);
+    vector_type(struct column_def *)  column_def_list = NULL;
 
-    return NULL;
+    vector_push(column_def_list, column_def);
+
+    return column_def_list;
 }
 
 vector_type(struct column_def *) 
 append_column_def_list(vector_type(struct column_def *) column_def_list, struct column_def *column_def)
 {
-    UNUSED(column_def_list);
-    UNUSED(column_def);
+    vector_push(column_def_list, column_def);
 
-    return NULL;
+    return column_def_list;
 }
 
 struct column_def * 
-create_column_def(const char *name, struct type_def *i)
+create_column_def(const char *name, struct type_def *type)
 {
-    UNUSED(name);
-    UNUSED(i);
+    struct column_def *cd = malloc(sizeof(struct column_def));
 
-    return NULL;
+    assert(cd != NULL);
+
+    cd->name = name;
+    cd->type = type;
+
+    return cd;
 }
 
 struct type_def * 
-create_type_def(int i)
+create_type_def(enum npsql_type type, uint16_t size)
 {
-    UNUSED(i);
-    return NULL;
+    struct type_def *td = malloc(sizeof(struct type_def));
+
+    assert(td != NULL);
+
+    td->type = type;
+    td->size = size; 
+
+    return td;
 }
 
 void free_select(struct select *select);
 void free_create_table(struct create_table *create_table);
 void free_table_ref(struct table_ref *table_ref);
+void free_column_def(struct column_def *column_def);
 void free_expr(struct expr *expr);
 
 void 
@@ -235,14 +257,26 @@ free_select(struct select * select)
 void
 free_create_table(struct create_table *create_table)
 {
-    free(create_table->table_name);
+    for (size_t i = 0; i < vector_size(create_table->column_defs); i++)
+    {
+        free_column_def(create_table->column_defs[i]);
+    }
+
+    vector_free(create_table->column_defs);
 }
 
 void 
 free_table_ref(struct table_ref *table_ref)
 {
-    free(table_ref->table_name);
+    free((char *)table_ref->table_name);
     free(table_ref);
+}
+
+void free_column_def(struct column_def *column_def)
+{
+    free((char *)column_def->name);
+    free(column_def->type);
+    free(column_def);
 }
 
 void 

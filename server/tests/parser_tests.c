@@ -10,7 +10,6 @@ void test_no_data_select()
 	size_t len = strlen(sql);
     struct parsed_sql *result = parse_sql(sql, len);
 
-
     assert(result->error == false);
 
     free_stmts(result);
@@ -67,8 +66,7 @@ void test_parse_error()
 
 void test_create_table()
 {
-    char *sql = "create table new_table;";
-
+    char *sql = "create table new_table ( id int, name char(10) );";
     size_t len = strlen(sql);
     struct parsed_sql *result = parse_sql(sql, len);
 
@@ -81,7 +79,7 @@ void test_create_table()
 int main(void)
 {   
     test_no_data_select();
-    //test_select_all_table_ref();
+    test_select_all_table_ref();
     test_select_table_ref();
     test_select_table_ref_where();
     test_parse_error();

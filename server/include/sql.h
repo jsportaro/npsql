@@ -1,11 +1,15 @@
 #ifndef __SQL_H__
 #define __SQL_H__
 
+#include <defaults.h>
+#include <types.h>
 #include <vector.h>
 
 #include <stdbool.h>
 #include <stdint.h>
 
+#define TABLE_NAME_SIZE (MAX_TABLE_NAME + 1)
+#define COLUMN_NAME_SIZE (MAX_COLUMN_NAME + 1)
 enum stmt_type
 {
     STMT_SELECT,
@@ -55,7 +59,7 @@ struct term_expr
 
 struct table_ref
 {
-    char *table_name;
+    const char *table_name;
 };
 
 struct select
@@ -71,17 +75,19 @@ struct select
 struct create_table
 {
     enum stmt_type type;
-    char *table_name;
+    const char *table_name;
+    vector_type(struct column_def *) column_defs;
 };
 
 struct type_def
-{
-    int i;
+{  
+    enum npsql_type type;
+    uint16_t size;
 };
 
 struct column_def
 {
-    char *name;
+    const char *name;
     struct type_def *type;
 };
 
@@ -119,8 +125,8 @@ struct expr * new_infix_expr(enum expr_type type, struct expr *l, struct expr *r
 struct sql_stmt * new_create_table(const char *name, vector_type(struct column_def *) column_defs);
 vector_type(struct column_def *) new_column_def_list(struct column_def *column_def);
 vector_type(struct column_def *) append_column_def_list(vector_type(struct column_def *) column_def_list, struct column_def *column_def);
-struct column_def * create_column_def(const char *name,  struct type_def *i);
-struct type_def * create_type_def(int i);
+struct column_def * create_column_def(const char *name,  struct type_def *type);
+struct type_def * create_type_def(enum npsql_type type, uint16_t size);
 
 void free_stmts(struct parsed_sql * parsed);
 

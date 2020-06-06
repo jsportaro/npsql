@@ -6,5 +6,8 @@
 #define LISTENING_PORT 15151
 #define BUFFER_POOL_SIZE 100
 #define PAGE_SIZE 0x200
-
+#define MAX_OBJECT_NAME 15
+#define MAX_TABLE_NAME  MAX_OBJECT_NAME
+#define MAX_COLUMN_NAME 25
+#define MAX_COLUMNS     16 
 #endif

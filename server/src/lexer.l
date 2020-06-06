@@ -7,7 +7,7 @@ void yyerror(char *s, ...);
 
 %option reentrant bison-bridge noyywrap
 
-id        [a-zA-Z][a-zA-Z_0-9]*
+id        [A-Za-z][A-Za-z0-9_]*
 int       [0-9]+
 blank     [ \t\n]
 string    '(\\.|''|[^'\n])*'
@@ -16,6 +16,7 @@ operators [-+&~|^/%*(),.;!]
 %%
 
 AND         { return AND;    }
+CHAR        { return CHAR;   }
 CREATE	    { return CREATE; }
 SELECT      { return SELECT; }
 FROM        { return FROM;   }
@@ -23,11 +24,11 @@ INT         { return INT;    }
 OR          { return OR;     }
 TABLE       { return TABLE;  }
 WHERE       { return WHERE;  }
- 
+
 {int}       { yylval->INTNUM = atol(yytext); return INTNUM; }
  
-{id}        { yylval->IDENTIFIER = yytext; return IDENTIFIER; }
-{string}    { yylval->STRING = yytext; return STRING; }
+{id}        { yylval->IDENTIFIER = strdup(yytext); return IDENTIFIER; }
+{string}    { yylval->STRING = strdup(yytext); return STRING; }
 
 {operators} { return yytext[0]; }
  

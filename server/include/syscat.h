@@ -2,6 +2,7 @@
 #define __SYSCAT_H__
 
 #include <storage.h>
+#include <transaction.h>
 
 struct syscat 
 {

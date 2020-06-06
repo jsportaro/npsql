@@ -33,8 +33,8 @@ struct plan_project
     vector_type(struct expr *) expr_list;
 };
 
+
 struct plan * new_no_data_select_plan(struct select *select);
-struct plan * new_create_table_plan(struct create_table *create_table);
 void free_plan(struct plan *plan);
 
 #endif

@@ -24,6 +24,7 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 {
 #include <sql.h>
 #include <vector.h>
+#include <types.h>
 }
 %define api.value.type union /* Generate YYSTYPE from these types:  */
 %token <long>           INTNUM     "integer"
@@ -36,6 +37,7 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 %left '*' '/'
 
 %token INT
+%token CHAR
 %token CREATE
 %token TABLE
 %token SELECT
@@ -79,6 +81,7 @@ select_stmt:
 select_expr_list: 
     select_expr                      { $$ = new_expr_list($1);          }
   | select_expr_list ',' select_expr { $$ = append_expr_list($1, $3);   }
+  | '*'                              { $$ = new_expr_list(NULL);}
 ;
 
 select_expr:
@@ -128,7 +131,8 @@ create_def:
 ;
 
 data_type:
-    INT                              { $$ = create_type_def(1); }
+    INT                              { $$ = create_type_def(TYPE_INT, 4); }
+  | CHAR '(' "integer" ')'           { $$ = create_type_def(TYPE_CHAR, $3); }
 ;
 
 %%

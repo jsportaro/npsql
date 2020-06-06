@@ -1,19 +1,19 @@
 #include <common.h>
+#include <create_table.h>
 #include <npsql.h>
 #include <networking.h>
 #include <parser.h>
 #include <plans.h>
 #include <planner.h>
 #include <sql.h>
+#include <transaction.h>
 
 #include <stdio.h>
 #include <string.h>
 
-int query_engine_init(char *data_file, char *log_file , struct query_engine *query_engine)
+int query_engine_init(const char *data_file, const char *log_file , struct query_engine *query_engine)
 {
-    UNUSED(data_file);
-    UNUSED(log_file);
-    UNUSED(query_engine);
+    initialize_transaction_context(&query_engine->ctx, data_file, log_file);
 
     return DB_OK;
 }
@@ -26,12 +26,11 @@ struct query_results * submit_query(struct query_engine *query_engine, char *que
     results->next_stmt = 0;
     results->sets_to_return = vector_size(results->parsed_sql->stmts);
 
-    results->rows_to_return = 104;
+    results->rows_to_return = 0;
     results->current = NULL;
     results->current_plan = NULL;
     results->current_scan = NULL;
-    
-    UNUSED(query_engine);
+    results->engine = query_engine;     
 
     return results;
 }
@@ -47,13 +46,21 @@ bool get_next_set(struct query_results *r)
     {
         return false;
     }
+    struct sql_stmt *s = r->parsed_sql->stmts[r->next_stmt];
 
     free_plan(r->current_plan);
     free_scan(r->current_scan);
+    
+    if (s->type == STMT_SELECT)
+    {
+        r->current_plan =  create_plan(s);
+        r->current_scan = r->current_plan->open(r->current_plan);
+        r->next_stmt++;
+    }
+    else if (s->type == STMT_CREATE_TABLE)
+    {
 
-    r->current_plan =  create_plan(r->parsed_sql->stmts[r->next_stmt]);
-    r->current_scan = r->current_plan->open(r->current_plan);
-    r->next_stmt++;
+    }
 
     return true;
 }

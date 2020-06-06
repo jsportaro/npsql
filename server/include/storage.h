@@ -1,15 +1,13 @@
 #ifndef __STORAGE_H__
 #define __STORAGE_H__
 
+#include <defaults.h>
+#include <types.h>
 #include <vector.h>
 
 #include <stdint.h>
 
 #define PAGE_SIZE       0x200
-#define MAX_OBJECT_NAME 15
-#define MAX_TABLE_NAME  MAX_OBJECT_NAME
-#define MAX_COLUMN_NAME 25
-#define MAX_COLUMNS     16 
 #define HEADER_OFFSET   0
 
 #define INVALID_PNUM UINT64_MAX
@@ -23,17 +21,11 @@ typedef uint32_t TSXID;
 typedef uint16_t RECORD_HANDLE;
 
 #define DATA_PAGE_TYPE 0x0FF0
-#define AM_PAGE_TYPE    0x1FF1
-
-enum column_type
-{
-    TYPE_INT,
-    TYPE_CHAR
-};
+#define AM_PAGE_TYPE   0x1FF1
 
 struct column
 {
-    enum column_type type;
+    enum npsql_type type;
     uint16_t size;
     char *name;
     uint16_t offset;

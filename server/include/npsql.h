@@ -5,6 +5,7 @@
 #include <vector.h>
 #include <parser.h>
 #include <sql.h>
+#include <transaction.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -15,7 +16,7 @@
 
 struct query_engine
 {
-    char *database;
+    struct transaction_context ctx;
 };
 
 struct query_results
@@ -27,10 +28,11 @@ struct query_results
     uint32_t             next_stmt;
     struct plan          *current_plan;
     struct scan          *current_scan;
+    struct query_engine  *engine;
 };
 
 
-int query_engine_init(char *data_file, char *log_file, struct query_engine *query_engine);
+int query_engine_init(const char *data_file, const char *log_file, struct query_engine *query_engine);
 struct query_results * submit_query(struct query_engine *query_engine, char *query, size_t length);
 bool get_next_set(struct query_results *results);
 bool has_rows(struct query_results *r);

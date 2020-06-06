@@ -71,7 +71,6 @@ end:
     return r;
 }
 
-
 static vector_type(struct column) 
 bind_columns(struct select *select)
 {
