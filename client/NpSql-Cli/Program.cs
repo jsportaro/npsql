@@ -1,6 +1,5 @@
 ﻿using NpSql;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -61,11 +60,8 @@ namespace NpSql_Cli
                         }
                         break;
                     case "disconnect":
-                        if (connection != null)
-                        {
-                            connection.Dispose();
-                            connection = null;
-                        }
+                        connection.Dispose();
+                        connection = null;
                         break;
                     case "query":
                         if (!hasConnection)
@@ -118,8 +114,7 @@ namespace NpSql_Cli
                 using (var command = new NpSqlCommand(conn))
                 {
                     command.CommandText = sql;
-                    Stopwatch sw = new Stopwatch();
-                    
+
                     using (var reader = (NpSqlDataReader)command.ExecuteReader())
                     {
                         int rowLength = WriteColumnHeader(reader);
@@ -131,7 +126,7 @@ namespace NpSql_Cli
                         }
 
                         rowLength = WriteVerticalSeperator(reader, rowLength);
-                        Console.WriteLine();
+
                     }
                 }
             }
@@ -143,7 +138,7 @@ namespace NpSql_Cli
 
         private static void WriteRow(NpSqlDataReader reader)
         {
-            Console.Write("  |");
+            Console.Write('|');
 
             var i = 0;
             var leadingSpace = 0;
@@ -156,10 +151,10 @@ namespace NpSql_Cli
                 {
 
                     case NpSql.Nqp.NqpTypes.Char:
-                        s = reader.GetString(i).Trim();
+                        s = reader.GetString(0).Trim();
                         break;
                     case NpSql.Nqp.NqpTypes.Int:
-                        s = reader.GetInt32(i).ToString();
+                        s = reader.GetInt32(1).ToString();
                         break;
                 }
 
@@ -186,7 +181,7 @@ namespace NpSql_Cli
             var rowLength = 2;
 
             rowLength = WriteVerticalSeperator(reader, rowLength);
-            Console.Write("  |");
+            Console.Write("|");
             foreach (NpSqlColumnDefinition column in reader.GetColumnSchema())
             {
 
@@ -209,7 +204,7 @@ namespace NpSql_Cli
 
         private static int WriteVerticalSeperator(NpSqlDataReader reader, int rowLength)
         {
-            Console.Write("  +");
+            Console.Write("+");
             foreach (NpSqlColumnDefinition column in reader.GetColumnSchema())
             {
 
