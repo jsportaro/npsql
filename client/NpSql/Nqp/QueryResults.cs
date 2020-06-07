@@ -121,6 +121,9 @@ namespace NpSql.Nqp
             short offset = 0;
             columnsSchema.Clear();
             receivedCompleted = false;
+
+            var unnamedCount = 0;
+
             while (!currentReader.ReadToEnd)
             {
                 var type = (NqpTypes)currentReader.ReadByte();
@@ -128,6 +131,11 @@ namespace NpSql.Nqp
                 var nameLength = currentReader.ReadShort();
                 var name = currentReader.ReadString(nameLength);
 
+                if (name == string.Empty)
+                {
+                    name = $"Col{unnamedCount}";
+                    unnamedCount++;
+                }
 
                 columnsSchema.Add(new NpSqlColumnDefinition
                 {
