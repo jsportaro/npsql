@@ -36,19 +36,22 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 %left '+' '-'
 %left '*' '/'
 
-%token INT
-%token CHAR
-%token CREATE
-%token TABLE
-%token SELECT
-%token FROM
-%token WHERE
 %token AND
-%token OR
+%token CHAR
 %token COMPARISON 
+%token CREATE
+%token FROM
+%token INT
+%token INSERT
+%token INTO
+%token OR
+%token SELECT
+%token TABLE
+%token VALUES
+%token WHERE
 
-%type <struct sql_stmt *> stmt select_stmt create_table_stmt
-%type <vector_type(struct expr *)> select_expr_list
+%type <struct sql_stmt *> stmt select_stmt create_table_stmt insert_stmt
+%type <vector_type(struct expr *)> select_expr_list value_list
 %type <vector_type(struct table_ref *)> table_references
 %type <vector_type(struct column_def *)> create_col_list
 %type <struct table_ref *> table_reference
@@ -57,6 +60,7 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 %type <struct expr *> opt_where
 %type <struct column_def *> create_def
 %type <struct type_def *> data_type
+%type <vector_type(char *)> column_list
 %start stmt_list;
 
 %%
@@ -69,6 +73,7 @@ stmt_list:
 stmt: 
     select_stmt                      { $$ = $1; }     
   | create_table_stmt                { $$ = $1; }
+  | insert_stmt                      { $$ = $1; }
 ;
 
 select_stmt: 
@@ -101,20 +106,6 @@ opt_where:
   | WHERE expr                       { $$ = $2;  }
 ;
 
-expr:
-    "identifier"                     { $$ = new_term_expr(EXPR_IDENIFIER, $1); }
-  | "string"                         { $$ = new_term_expr(EXPR_STRING,    $1); }
-  | "integer"                        { $$ = new_term_expr(EXPR_INTEGER,   (const void *)(&$1)); }
-;
-
-expr: 
-    expr '+' expr                    { $$ = new_infix_expr(EXPR_ADD, $1, $3); }
-  | expr '-' expr                    { $$ = new_infix_expr(EXPR_SUB, $1, $3); }
-  | expr '*' expr                    { $$ = new_infix_expr(EXPR_MUL, $1, $3); }
-  | expr '/' expr                    { $$ = new_infix_expr(EXPR_DIV, $1, $3); }
-  | expr COMPARISON expr             { $$ = new_infix_expr(EXPR_COMPARISON, $1, $3); }
-;
-
 create_table_stmt:
     CREATE TABLE 
     "identifier" 
@@ -133,6 +124,37 @@ create_def:
 data_type:
     INT                              { $$ = create_type_def(TYPE_INT, 4); }
   | CHAR '(' "integer" ')'           { $$ = create_type_def(TYPE_CHAR, $3); }
+;
+
+insert_stmt:
+    INSERT INTO "identifier" 
+    '(' column_list ')'
+    VALUES
+    '(' value_list ')'              { $$ = new_insert($3, $5, $9); }
+;
+
+column_list:
+     "identifier"                    { $$ = new_column_list($1);          }
+   | column_list ',' "identifier"    { $$ = append_column_list($1, $3);   }
+;
+
+value_list: 
+    expr                             { $$ = new_expr_list($1);          }
+  | value_list ',' expr              { $$ = append_expr_list($1, $3);   }
+;
+
+expr:
+    "identifier"                     { $$ = new_term_expr(EXPR_IDENIFIER, $1); }
+  | "string"                         { $$ = new_term_expr(EXPR_STRING,    $1); }
+  | "integer"                        { $$ = new_term_expr(EXPR_INTEGER,   (const void *)(&$1)); }
+;
+
+expr: 
+    expr '+' expr                    { $$ = new_infix_expr(EXPR_ADD, $1, $3); }
+  | expr '-' expr                    { $$ = new_infix_expr(EXPR_SUB, $1, $3); }
+  | expr '*' expr                    { $$ = new_infix_expr(EXPR_MUL, $1, $3); }
+  | expr '/' expr                    { $$ = new_infix_expr(EXPR_DIV, $1, $3); }
+  | expr COMPARISON expr             { $$ = new_infix_expr(EXPR_COMPARISON, $1, $3); }
 ;
 
 %%

@@ -20,9 +20,12 @@ CHAR        { return CHAR;   }
 CREATE	    { return CREATE; }
 SELECT      { return SELECT; }
 FROM        { return FROM;   }
+INSERT      { return INSERT; }
 INT         { return INT;    }
+INTO        { return INTO;   }
 OR          { return OR;     }
 TABLE       { return TABLE;  }
+VALUES      { return VALUES; }
 WHERE       { return WHERE;  }
 
 {int}       { yylval->INTNUM = atol(yytext); return INTNUM; }

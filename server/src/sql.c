@@ -195,8 +195,38 @@ create_type_def(enum npsql_type type, uint16_t size)
     return td;
 }
 
+struct sql_stmt *
+new_insert(const char *name, vector_type(char *) columns, vector_type(struct expr *) values)
+{
+    struct insert *insert = malloc(sizeof(struct insert));
+
+    insert->type = STMT_INSERT_INTO;
+    insert->columns = columns;
+    insert->values = values;
+    insert->name = name;
+
+    return (struct sql_stmt *)insert;
+}
+
+vector_type(char *) new_column_list(const char *column)
+{
+    vector_type(char *) column_list = NULL;
+
+    vector_push(column_list, (char *)column);
+
+    return column_list;
+}
+
+vector_type(char *) append_column_list(vector_type(char *) column_list, const char *column)
+{
+    vector_push(column_list, (char *)column);
+
+    return column_list;
+}
+
 void free_select(struct select *select);
 void free_create_table(struct create_table *create_table);
+void free_insert_into(struct insert *insert);
 void free_table_ref(struct table_ref *table_ref);
 void free_column_def(struct column_def *column_def);
 void free_expr(struct expr *expr);
@@ -214,6 +244,8 @@ free_stmts(struct parsed_sql * parsed)
             case STMT_CREATE_TABLE:
                 free_create_table((struct create_table *)parsed->stmts[i]);
                 break;
+            case STMT_INSERT_INTO:
+                free_insert_into((struct insert *)parsed->stmts[i]);
         }
 
         free(parsed->stmts[i]);
@@ -263,6 +295,23 @@ free_create_table(struct create_table *create_table)
     }
 
     vector_free(create_table->column_defs);
+}
+
+void free_insert_into(struct insert *insert)
+{
+    for (size_t i = 0; i < vector_size(insert->columns); i++)
+    {
+        free(insert->columns[i]);
+    }
+
+    for (size_t i = 0; i < vector_size(insert->values); i++)
+    {
+        free_expr(insert->values[i]);
+    }
+
+    free((char *)insert->name);
+    vector_free(insert->columns);
+    vector_free(insert->values);
 }
 
 void 

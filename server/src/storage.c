@@ -4,6 +4,7 @@
 
 #include <string.h>
 
+
 void 
 init_table_info(struct table_info *table)
 {
@@ -14,14 +15,10 @@ init_table_info(struct table_info *table)
 void 
 add_int(struct table_info *table, const char *name, const uint16_t name_length)
 {
-    char *n = malloc(name_length + 1);
-    memcpy(n, name, name_length);
-
-    n[name_length] = '\0';
+    memcpy(table->columns[table->column_count].name, name, name_length);
 
     table->columns[table->column_count].size = sizeof(int);
     table->columns[table->column_count].type = TYPE_INT;
-    table->columns[table->column_count].name = n;
     table->columns[table->column_count].offset = table->record_size;
 
     table->column_count++;
@@ -31,14 +28,10 @@ add_int(struct table_info *table, const char *name, const uint16_t name_length)
 void 
 add_char(struct table_info *table, const char *name, const uint16_t name_length, uint16_t size)
 {
-    char *n = malloc(name_length + 1);
-    memcpy(n, name, name_length);
-
-    n[name_length] = '\0';
+    memcpy(table->columns[table->column_count].name, name, name_length);
 
     table->columns[table->column_count].size = size;
     table->columns[table->column_count].type   = TYPE_CHAR;
-    table->columns[table->column_count].name   = n;
     table->columns[table->column_count].offset = table->record_size;
     
     table->column_count++;

@@ -26,6 +26,10 @@ void create_table(
     struct transaction *tsx, 
     struct table_info *schema);
 
-
+bool fetch_table_info(
+    const char *name, 
+    struct table_info *ti, 
+    struct syscat *syscat,
+    struct transaction *tsx);
 
 #endif

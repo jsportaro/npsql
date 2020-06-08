@@ -13,7 +13,8 @@
 enum stmt_type
 {
     STMT_SELECT,
-    STMT_CREATE_TABLE
+    STMT_CREATE_TABLE,
+    STMT_INSERT_INTO
 };
 
 struct sql_stmt
@@ -79,6 +80,14 @@ struct create_table
     vector_type(struct column_def *) column_defs;
 };
 
+struct insert
+{
+    enum stmt_type type;
+    const char *name;
+    vector_type(char *) columns;
+    vector_type(struct expr *) values;
+};
+
 struct type_def
 {  
     enum npsql_type type;
@@ -90,6 +99,8 @@ struct column_def
     const char *name;
     struct type_def *type;
 };
+
+
 
 struct sql_stmts
 {
@@ -127,6 +138,10 @@ vector_type(struct column_def *) new_column_def_list(struct column_def *column_d
 vector_type(struct column_def *) append_column_def_list(vector_type(struct column_def *) column_def_list, struct column_def *column_def);
 struct column_def * create_column_def(const char *name,  struct type_def *type);
 struct type_def * create_type_def(enum npsql_type type, uint16_t size);
+
+struct sql_stmt * new_insert(const char *name, vector_type(char *) columns, vector_type(struct expr *) values);
+vector_type(char *) new_column_list(const char *column);
+vector_type(char *) append_column_list(vector_type(char *) column_list, const char *column);
 
 void free_stmts(struct parsed_sql * parsed);
 

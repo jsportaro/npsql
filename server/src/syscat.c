@@ -1,3 +1,4 @@
+#include <common.h>
 #include <heap_table.h>
 #include <storage.h>
 #include <syscat.h>
@@ -96,4 +97,52 @@ void create_table(
         set_int(&column_catalog, col_rid, length_col, current.size);
         set_int(&column_catalog, col_rid, offset, current.offset);
     }
+}
+
+bool
+fetch_table_info(const char *name, struct table_info *ti, struct syscat *syscat, struct transaction *tsx)
+{ 
+    ti->column_count = 0;
+    struct heap_table table_catalog;
+    struct heap_table column_catalog;
+
+    open_heap_table(&table_catalog, &syscat->table_catalog_schema, tsx, 0);
+    struct heap_iterator iterator = { 0 };
+
+    open_heap_iterator(&table_catalog, &iterator);
+    int c_am_pid = 0;
+    bool exists = false;
+    while (next_record(&iterator))
+    {
+        struct record_id current_rid = iterator.current_record;
+        char cname[MAX_TABLE_NAME];
+        get_char(&table_catalog, current_rid, name_col, cname);
+
+        if (strncmp(name, cname, MAX_COLUMN_NAME) == 0)
+        {
+            get_int(&table_catalog, current_rid, am_pid, &c_am_pid);
+            exists = true;
+        }
+
+        break;
+    }
+
+    if (exists == true)
+    {
+        open_heap_iterator(&column_catalog, &iterator);
+
+        while (next_record(&iterator))
+        {
+            struct record_id current_rid = iterator.current_record;
+
+            char cname[MAX_TABLE_NAME];
+            get_char(&table_catalog, current_rid, name_col, cname);
+            if (strncmp(name, cname, MAX_COLUMN_NAME) == 0)
+            {
+                
+            }
+        }
+    }
+
+    return exists;
 }

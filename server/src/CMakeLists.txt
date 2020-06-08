@@ -45,6 +45,7 @@ set (COMMON_SOURCE
     data_page.c
     file.c
     heap_table.c
+    insert.c
     lock_table.c
     log_file.c
     nqp.c

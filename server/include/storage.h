@@ -27,13 +27,13 @@ struct column
 {
     enum npsql_type type;
     uint16_t size;
-    char *name;
+    char name[MAX_COLUMN_NAME];
     uint16_t offset;
 };
 
 struct table_info
 {
-    char *table_name;
+    char table_name[MAX_TABLE_NAME];
     uint16_t record_size;
 
     struct column columns[MAX_COLUMNS];

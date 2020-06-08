@@ -15,7 +15,8 @@
         "initializer_list": "c",
         "utility": "c",
         "algorithm": "cpp",
-        "create_table.h": "c"
+        "create_table.h": "c",
+        "system_error": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }
