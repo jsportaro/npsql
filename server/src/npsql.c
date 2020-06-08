@@ -1,5 +1,7 @@
 #include <common.h>
 #include <create_table.h>
+#include <insert.h>
+#include <file.h>
 #include <npsql.h>
 #include <networking.h>
 #include <parser.h>
@@ -15,6 +17,19 @@ int query_engine_init(const char *data_file, const char *log_file , struct query
 {
     initialize_transaction_context(&query_engine->ctx, data_file, log_file);
 
+    struct syscat cat = { 0 };
+    struct transaction *tsx = begin_transaction(&query_engine->ctx);
+    {
+        if (query_engine->ctx.data.page_count == 0)
+        {
+            create_system_catalogs(&cat, tsx);
+        }
+
+        commit(tsx);
+    }
+
+    intialize_system_catalogs(&query_engine->cat);
+
     return DB_OK;
 }
 
@@ -25,18 +40,23 @@ struct query_results * submit_query(struct query_engine *query_engine, char *que
     results->parsed_sql = parse_sql(query, length);
     results->next_stmt = 0;
     results->sets_to_return = vector_size(results->parsed_sql->stmts);
-
     results->rows_to_return = 0;
     results->current = NULL;
     results->current_plan = NULL;
     results->current_scan = NULL;
     results->engine = query_engine;     
+    results->tsx = begin_transaction(&results->engine->ctx);
 
     return results;
 }
 
 bool has_rows(struct query_results *r)
 {
+    if (r->current_scan == NULL)
+    {
+        return false;
+    }
+
     return r->current_scan->has_rows;
 }
 
@@ -59,7 +79,11 @@ bool get_next_set(struct query_results *r)
     }
     else if (s->type == STMT_CREATE_TABLE)
     {
+        r->current = NULL;
+        r->current_plan = NULL;
+        r->current_scan = NULL;
 
+        execute_create_table(r->tsx, &r->engine->cat, (struct create_table *)s);
     }
 
     return true;
@@ -80,7 +104,7 @@ void free_results(struct query_results *r)
     free(r);
 }
 
-bool next_record(struct query_results *r)
+bool next_set_record(struct query_results *r)
 {
     return r->current_scan->next(r->current_scan);
 }

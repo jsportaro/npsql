@@ -146,6 +146,11 @@ transactional_read(
     get_lock(tsx, pnum, true);
     struct transaction_buffer *tbuffer = get_buffer(tsx, pnum);
 
+    if (tbuffer == NULL)
+    {
+        return;
+    }
+
     memcpy(dest, tbuffer->buffer->page + offset, length);
 }
 

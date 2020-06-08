@@ -210,7 +210,7 @@ static void say_columns(struct session *session, struct query_results *results)
         {
             struct column col = columns[i];
             long start_size = vector_size(column_bytes);
-            uint16_t length = COLUMN_MIN_LENGTH + vector_size(col.name);
+            uint16_t length = COLUMN_MIN_LENGTH + strlen(col.name);
             
             vector_grow(column_bytes, length  + start_size);
 
@@ -219,7 +219,7 @@ static void say_columns(struct session *session, struct query_results *results)
             column_start[0] = (uint8_t)col.type;                         //  Column Type
             htops((uint16_t)col.size, &column_start[1]);                 //  Column Type Size (# bytes)
             htops((uint16_t)vector_size(col.name), &column_start[3]);          //  Name Size (# bytes)
-            memcpy(&column_start[5], col.name, vector_size(col.name));  //  Name 
+            memcpy(&column_start[5], col.name, strlen(col.name));  //  Name 
 
             vector_set_size(column_bytes, length + start_size);
         }
@@ -274,7 +274,7 @@ static void handle_query(struct session *session, size_t payload_size)
 
         say_columns(session, results);
 
-        while (next_record(results))
+        while (next_set_record(results))
         {
             if (vector_size(rowset_bytes) + vector_size(results->current_scan) > MAX_MESSAGE_SIZE)
             {

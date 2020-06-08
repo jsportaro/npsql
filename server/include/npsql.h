@@ -5,6 +5,7 @@
 #include <vector.h>
 #include <parser.h>
 #include <sql.h>
+#include <syscat.h>
 #include <transaction.h>
 
 #include <stdio.h>
@@ -17,6 +18,8 @@
 struct query_engine
 {
     struct transaction_context ctx;
+    struct syscat              cat;
+
 };
 
 struct query_results
@@ -29,6 +32,7 @@ struct query_results
     struct plan          *current_plan;
     struct scan          *current_scan;
     struct query_engine  *engine;
+    struct transaction   *tsx;
 };
 
 
@@ -36,7 +40,7 @@ int query_engine_init(const char *data_file, const char *log_file, struct query_
 struct query_results * submit_query(struct query_engine *query_engine, char *query, size_t length);
 bool get_next_set(struct query_results *results);
 bool has_rows(struct query_results *r);
-bool next_record(struct query_results *results);
+bool next_set_record(struct query_results *results);
 void free_results(struct query_results *results);
 vector_type(uint8_t) get_row_bytes(struct query_results *results);
 

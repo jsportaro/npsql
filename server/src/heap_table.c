@@ -7,7 +7,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-
 #define ALLOCAITON_MAP_SIZE (sizeof(struct allocation_map_header))
 #define AM_ENTRY_LIMIT ((PAGE_SIZE - ALLOCAITON_MAP_SIZE) / sizeof(PNUM))
 
@@ -136,7 +135,7 @@ bool open_heap_iterator(struct heap_table *table, struct heap_iterator *iterator
 bool next_record(struct heap_iterator *iterator)
 {
     RECORD_HANDLE handle = INVALID_RECORD_HANDLE;
-// 1) Attempt to get record from current page iterator
+    // 1) Attempt to get record from current page iterator
     // 2) If not, try to get next page in am open iterator go to 1,
     // 3) if not, go to next am and go to 1
 attempt_to_get_next:
@@ -196,7 +195,6 @@ attempt_to_get_next:
     }
 }
 
-
 void get_int(struct heap_table *table, struct record_id rid, const char *column, int32_t *value)
 {
     struct data_page page;
@@ -224,8 +222,6 @@ void set_char(struct heap_table *table, struct record_id rid, const char *column
     open_data_page(rid.pid, &page, table->table_info, table->tsx);
     page_set_char(&page, rid.slot, column, value);
 }
-
-
 
 static PNUM 
 add_new_am(struct heap_table *table, struct allocation_map_header *preceding)
@@ -284,7 +280,7 @@ scan_am_for_insert(struct heap_table *table, PNUM am_pid, uint16_t start_at)
 
     r.am_entry_index = start_at;
     r.handle = INVALID_RECORD_HANDLE;
-
+    transactional_pin(table->tsx, am_pid);
     transactional_read(table->tsx, am_pid, &r.am, 0, ALLOCAITON_MAP_SIZE);
 
     while (r.am_entry_index < r.am.pages_count)
@@ -309,4 +305,3 @@ scan_am_for_insert(struct heap_table *table, PNUM am_pid, uint16_t start_at)
 
     return r;
 }
-

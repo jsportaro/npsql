@@ -26,9 +26,9 @@ typedef uint16_t RECORD_HANDLE;
 struct column
 {
     enum npsql_type type;
-    uint16_t size;
+    uint32_t size;
     char name[MAX_COLUMN_NAME];
-    uint16_t offset;
+    uint32_t offset;
 };
 
 struct table_info

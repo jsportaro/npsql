@@ -29,6 +29,7 @@ void create_table(
 bool fetch_table_info(
     const char *name, 
     struct table_info *ti, 
+    PNUM *first_am,
     struct syscat *syscat,
     struct transaction *tsx);
 

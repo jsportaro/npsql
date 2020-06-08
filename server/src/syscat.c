@@ -100,27 +100,27 @@ void create_table(
 }
 
 bool
-fetch_table_info(const char *name, struct table_info *ti, struct syscat *syscat, struct transaction *tsx)
+fetch_table_info(const char *name, struct table_info *ti, PNUM *first_am, struct syscat *syscat, struct transaction *tsx)
 { 
     ti->column_count = 0;
     struct heap_table table_catalog;
     struct heap_table column_catalog;
 
-    open_heap_table(&table_catalog, &syscat->table_catalog_schema, tsx, 0);
+    open_heap_table(&table_catalog, &syscat->table_catalog_schema, tsx, TABLE_CATALOG_AM_PID);
     struct heap_iterator iterator = { 0 };
-
+    int fam;
     open_heap_iterator(&table_catalog, &iterator);
-    int c_am_pid = 0;
     bool exists = false;
     while (next_record(&iterator))
     {
         struct record_id current_rid = iterator.current_record;
-        char cname[MAX_TABLE_NAME];
-        get_char(&table_catalog, current_rid, name_col, cname);
+        char tname[MAX_TABLE_NAME];
+        get_char(&table_catalog, current_rid, name_col, tname);
 
-        if (strncmp(name, cname, MAX_COLUMN_NAME) == 0)
+        if (strncmp(name, tname, MAX_COLUMN_NAME) == 0)
         {
-            get_int(&table_catalog, current_rid, am_pid, &c_am_pid);
+            get_int(&table_catalog, current_rid, am_pid, &fam);
+            *first_am = (uint64_t)fam;
             exists = true;
         }
 
@@ -129,17 +129,23 @@ fetch_table_info(const char *name, struct table_info *ti, struct syscat *syscat,
 
     if (exists == true)
     {
+        open_heap_table(&column_catalog, &syscat->column_catalog_schema, tsx, COLUMN_CATALOG_AM_PID);
         open_heap_iterator(&column_catalog, &iterator);
+        char cname[MAX_COLUMN_NAME] = { 0 };
 
         while (next_record(&iterator))
         {
             struct record_id current_rid = iterator.current_record;
 
-            char cname[MAX_TABLE_NAME];
-            get_char(&table_catalog, current_rid, name_col, cname);
+            get_char(&column_catalog, current_rid, table_name, cname);
             if (strncmp(name, cname, MAX_COLUMN_NAME) == 0)
             {
-                
+                get_char(&column_catalog, current_rid, name_col, ti->columns[ti->column_count].name);
+                get_int(&column_catalog, current_rid, type, (int32_t *)&ti->columns[ti->column_count].type);
+                get_int(&column_catalog, current_rid, length_col, (int32_t *)&ti->columns[ti->column_count].size);
+                get_int(&column_catalog, current_rid, offset, (int32_t *)&ti->columns[ti->column_count].offset);
+
+                ti->column_count++;
             }
         }
     }

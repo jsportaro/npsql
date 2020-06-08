@@ -22,8 +22,8 @@
 int main(void)
 {
     struct transaction *tsx = NULL;
-    char *create_table = "create table new_table ( id int, name char(10) );";
-    char *insert_into  = "insert into new_table(id, name) values (1, 'Heather');";
+    char *create_table = "create table new_table ( person_id int, name char(10) );";
+    char *insert_into  = "insert into new_table(person_id, name) values (1, 'Heather');";
 
     struct parsed_sql *ct_result = parse_sql(create_table, strlen(create_table));
     struct parsed_sql *ii_result = parse_sql(insert_into, strlen(insert_into));
