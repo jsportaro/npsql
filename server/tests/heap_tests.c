@@ -84,7 +84,6 @@ single_table_page_write_read()
     }
 
     free_transaction_context(&ctx);
-    free_table_info(&people);
 }
 
 void
@@ -159,7 +158,6 @@ complete_table()
     assert(written == read);
 
     free_transaction_context(&ctx);
-    free_table_info(&people_info);
 }
 
 int main(void)
