@@ -110,26 +110,27 @@ release(struct lock_table *ls, PNUM pnum)
 static struct db_lock * 
 find_existing_lock(struct lock_table *lt, PNUM pnum)
 {
-    for (uint32_t i = 0; i < vector_size(lt->locks); i++)
+    for (size_t i = 0; lt->locks != NULL && i < vector_size(lt->locks); i++)
     {
         if (lt->locks[i].pnum == pnum)
         {
             return &lt->locks[i];
         }
     }
-
+    
     return NULL;
 }
 
 static struct db_lock *
 add_rw_lock(struct lock_table *lt, PNUM pnum)
 {
-    struct db_lock new_rw_lock;
+    struct db_lock new_rw_lock = { 0 };
 
     new_rw_lock.pnum = pnum;
     new_rw_lock.read_count = 0;
             
     vector_push(lt->locks, new_rw_lock);
-
-    return &lt->locks[vector_size(lt) - 1];
+    
+    size_t i = vector_size(lt->locks) - 1;
+    return &lt->locks[i];
 }

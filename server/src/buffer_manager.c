@@ -199,6 +199,7 @@ read_buffer(struct buffer *b, PNUM pnum)
             b->owner->data_file, 
             pnum, 
             b->page);
-    
+            
+    b->page_number = pnum;
     b->pins = 0;
 }

@@ -1,4 +1,5 @@
 #include <buffer_manager.h>
+#include <common.h>
 #include <data_file.h>
 #include <log_file.h>
 #include <transaction.h>
@@ -21,7 +22,7 @@ transaction_buffer* get_buffer(struct transaction *tsx, PNUM pnum);
 static struct buffer* 
 add_buffer(struct transaction *tsx, struct buffer *buffer, bool pin);
 
-static void 
+void 
 get_lock(struct transaction *tsx, PNUM page_number, bool is_shared);
 
 static bool 
@@ -55,6 +56,8 @@ struct transaction*
 begin_transaction(struct transaction_context *context)
 {
     struct transaction *tsx = malloc(sizeof(struct transaction));
+
+    memset(tsx, 0, sizeof(struct transaction));
 
     assert(tsx != NULL);
 
@@ -242,13 +245,14 @@ add_buffer(struct transaction *tsx, struct buffer *buffer, bool pin)
 }
 
 
-static void 
+void 
 get_lock(struct transaction *tsx, PNUM pnum, bool is_shared)
 {
     if (lock_already_taken(tsx, pnum))
     {
         return;
     }
+
 
     if (is_shared == true)
     {
@@ -259,7 +263,39 @@ get_lock(struct transaction *tsx, PNUM pnum, bool is_shared)
         xlock(&tsx->ctx->locks, pnum);
     }
 
+   
     vector_push(tsx->locks, pnum);
+ size_t t = vector_size(tsx->locks); UNUSED(t);
+    // do { 
+    //     size_t __capacity = vector_capacity(tsx->locks); 
+    //     if (__capacity <= vector_size(tsx->locks)) 
+    //     { 
+    //         do {
+    //             const size_t __new_size = (!__capacity ? __capacity + 1 : __capacity * 2) * sizeof(*((tsx->locks))) + (sizeof(size_t) * 2); 
+    //             if (!((tsx->locks))) 
+    //             { 
+    //                 size_t *__new_vector = malloc(__new_size); 
+    //                 assert(__new_vector); 
+    //                 memset(__new_vector, 0, __new_size); 
+    //                 ((tsx->locks)) = (void *)(&__new_vector[2]); 
+    //                 vector_set_capacity(((tsx->locks)), (!__capacity ? __capacity + 1 : __capacity * 2)); 
+    //                 vector_set_size(((tsx->locks)), (0)); 
+    //             } 
+    //             else 
+    //             { 
+    //                 size_t *__true_beginning = &((size_t *)((tsx->locks)))[-2]; 
+    //                 size_t *__new_vector = realloc(__true_beginning, __new_size); 
+    //                 assert(__new_vector); 
+    //                 memset(__new_vector + __capacity, 0, __new_size - __capacity);
+    //                 ((tsx->locks)) = (void *)(&__new_vector[2]); 
+    //                 vector_set_capacity(((tsx->locks)), (!__capacity ? __capacity + 1 : __capacity * 2)); 
+    //             } 
+    //         } while (0);
+
+    //     } 
+    //     tsx->locks[vector_size(tsx->locks)] = (pnum); 
+    //     vector_set_size((tsx->locks), vector_size(tsx->locks) + 1); 
+    //} while (0);
 }
 
 static bool 

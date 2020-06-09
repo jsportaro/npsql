@@ -295,6 +295,7 @@ free_create_table(struct create_table *create_table)
     }
 
     vector_free(create_table->column_defs);
+    free((char *)create_table->table_name);
 }
 
 void free_insert_into(struct insert *insert)

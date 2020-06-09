@@ -65,10 +65,10 @@ void create_table(
     struct transaction *tsx, 
     struct table_info *schema)
 {
-    struct heap_table object_catalog;
-    struct heap_table table_catalog;
-    struct heap_table column_catalog;
-    struct heap_table table;
+    struct heap_table object_catalog = { 0 };
+    struct heap_table table_catalog = { 0 };
+    struct heap_table column_catalog = { 0 };
+    struct heap_table table = { 0 };
     
     open_heap_table(&object_catalog, &syscat->object_catalog_schema, tsx, OBJECT_CATALOG_AM_PID);
     open_heap_table(&table_catalog, &syscat->table_catalog_schema, tsx, TABLE_CATALOG_AM_PID);

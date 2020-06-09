@@ -28,7 +28,7 @@ struct query_results
     int                  rows_to_return;
     vector_type(uint8_t) current;
     struct parsed_sql    *parsed_sql;
-    uint32_t             next_stmt;
+    uint32_t              next_stmt;
     struct plan          *current_plan;
     struct scan          *current_scan;
     struct query_engine  *engine;
@@ -37,6 +37,7 @@ struct query_results
 
 
 int query_engine_init(const char *data_file, const char *log_file, struct query_engine *query_engine);
+void free_query_engine(struct query_engine *query_engine);
 struct query_results * submit_query(struct query_engine *query_engine, char *query, size_t length);
 bool get_next_set(struct query_results *results);
 bool has_rows(struct query_results *r);

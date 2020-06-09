@@ -3,10 +3,6 @@
 
 bool execute_create_table(struct transaction *tsx, struct syscat *cat, struct create_table *ct)
 {
-    UNUSED(tsx);
-    UNUSED(ct);
-    UNUSED(cat);
-
     struct table_info ti = { 0 };
     size_t name_length = strlen(ct->table_name);
 

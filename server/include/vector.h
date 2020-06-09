@@ -41,10 +41,10 @@
     ((vec) ? ((size_t *)(vec))[-2] : (size_t)0)     
      
 #define vector_empty(vec)                                                      \
-	(vector_size(vec) == 0)     
+    (vector_size(vec) == 0)     
     
 #define vector_begin(vec)                                                      \
-	(vec)
+    (vec)
 
 #define vector_end(vec)                                                        \
 	((vec) ? &((vec)[vector_size(vec)]) : NULL)
@@ -78,13 +78,13 @@
     } while (0)     
      
 #define vector_push(vec, value)                                                \
-	do {                                                                       \
-		size_t __capacity = vector_capacity(vec);                              \
-		if (__capacity <= vector_size(vec)) {                                  \
-			vector_grow((vec), !__capacity ? __capacity + 1 : __capacity * 2); \
-		}                                                                      \
-		vec[vector_size(vec)] = (value);                                       \
-		vector_set_size((vec), vector_size(vec) + 1);                          \
-	} while (0)
+    do {                                                                       \
+        size_t __capacity = vector_capacity(vec);                              \
+        if (__capacity <= vector_size(vec)) {                                  \
+            vector_grow((vec), !__capacity ? __capacity + 1 : __capacity * 2); \
+        }                                                                      \
+        vec[vector_size(vec)] = (value);                                       \
+        vector_set_size((vec), vector_size(vec) + 1);                          \
+    } while (0)
 
 #endif

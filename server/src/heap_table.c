@@ -1,4 +1,4 @@
-
+#include <common.h>
 #include <data_page.h>
 #include <heap_table.h>
 #include <storage.h>
@@ -40,12 +40,14 @@ open_heap_table(struct heap_table *table, struct table_info *table_info, struct 
 struct record_id 
 heap_insert(struct heap_table *table)
 {
-    struct am_scan_result result;
+    struct am_scan_result result = { 0 };
     uint16_t am_scan_staring_index = 0;
-
+    uint32_t i = 0;
     PNUM current_am_pid = table->am_entry_pid;
+    UNUSED(i);
 
 am_scan_here_i_am:
+    i++;
     result = scan_am_for_insert(table, current_am_pid, am_scan_staring_index);
 
     uint16_t a = INVALID_RECORD_HANDLE;
@@ -226,7 +228,7 @@ void set_char(struct heap_table *table, struct record_id rid, const char *column
 static PNUM 
 add_new_am(struct heap_table *table, struct allocation_map_header *preceding)
 {
-    struct allocation_map_header new_am;
+    struct allocation_map_header new_am = { 0 };
 
     PNUM new_am_pid = transactional_append(table->tsx);
 
@@ -273,8 +275,8 @@ add_new_data_page(struct heap_table *table, PNUM allocation_map_pid)
 static struct am_scan_result 
 scan_am_for_insert(struct heap_table *table, PNUM am_pid, uint16_t start_at)
 {
-    struct am_scan_result r;
-    struct data_page page;
+    struct am_scan_result r = { 0 };
+    struct data_page page= { 0 };
     PNUM table_page_pid = INVALID_PNUM;
     RECORD_HANDLE handle = INVALID_RECORD_HANDLE;
 

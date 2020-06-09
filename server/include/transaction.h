@@ -72,4 +72,7 @@ void transactional_update(
 
 PNUM transactional_append(struct transaction *transaction);
 
+void 
+get_lock(struct transaction *tsx, PNUM pnum, bool is_shared);
+
 #endif

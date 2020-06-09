@@ -13,7 +13,8 @@
 #include <stdio.h>
 #include <string.h>
 
-int query_engine_init(const char *data_file, const char *log_file , struct query_engine *query_engine)
+int 
+query_engine_init(const char *data_file, const char *log_file, struct query_engine *query_engine)
 {
     initialize_transaction_context(&query_engine->ctx, data_file, log_file);
 
@@ -31,6 +32,12 @@ int query_engine_init(const char *data_file, const char *log_file , struct query
     intialize_system_catalogs(&query_engine->cat);
 
     return DB_OK;
+}
+
+void 
+free_query_engine(struct query_engine *qe)
+{
+    free_transaction_context(&qe->ctx);
 }
 
 struct query_results * submit_query(struct query_engine *query_engine, char *query, size_t length)
@@ -64,8 +71,11 @@ bool get_next_set(struct query_results *r)
 {
     if (r->sets_to_return == r->next_stmt)
     {
+        commit(r->tsx);
+
         return false;
     }
+
     struct sql_stmt *s = r->parsed_sql->stmts[r->next_stmt];
 
     free_plan(r->current_plan);
@@ -85,19 +95,24 @@ bool get_next_set(struct query_results *r)
 
         execute_create_table(r->tsx, &r->engine->cat, (struct create_table *)s);
     }
+    else if (s->type == STMT_INSERT_INTO)
+    {
+        r->current = NULL;
+        r->current_plan = NULL;
+        r->current_scan = NULL;
+
+        execute_insert_into(r->tsx, &r->engine->cat, (struct insert *)s);
+
+    }
+
+    r->next_stmt++;
+
 
     return true;
 }
 
 void free_results(struct query_results *r)
 {
-    // for (size_t i = 0; i < vector_size(r->current_plan->column_list); i++)
-    // {
-    //     struct column col = r->current_plan->column_list[i];
-    //     vector_free(col.name);
-    // }
-
-    // vector_free(r->current_columns);
     free_stmts(r->parsed_sql);
     free_plan(r->current_plan);
     free_scan(r->current_scan);
@@ -106,5 +121,12 @@ void free_results(struct query_results *r)
 
 bool next_set_record(struct query_results *r)
 {
-    return r->current_scan->next(r->current_scan);
+    if (r->current_scan != NULL)
+    {
+        return r->current_scan->next(r->current_scan);
+    }
+    else
+    {
+        return false;
+    }
 }

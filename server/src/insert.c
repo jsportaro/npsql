@@ -18,17 +18,18 @@ bool execute_insert_into(struct transaction *tsx, struct syscat *cat, struct ins
     // If that's okay, it'll creat a new row and start to insert
     // values.  If types don't match, then it'll return false.  
     // Calling code will need to do the rollback.
-    struct table_info ti;
-    PNUM first_am;
+    struct table_info ti = { 0 };
+    struct heap_table t = { 0 };
+    PNUM first_am = INVALID_PNUM;;
 
     if (fetch_table_info(i->name, &ti, &first_am, cat, tsx) == false)
     {
         return false;
     }
 
-    struct heap_table t = { 0 };
     open_heap_table(&t, &ti, tsx, first_am);
     struct record_id rid = heap_insert(&t);
+    
     bool column_match = false;
     for (size_t x = 0; x < vector_size(i->columns); x++)
     {
