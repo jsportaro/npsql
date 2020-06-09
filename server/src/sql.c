@@ -108,8 +108,7 @@ new_term_expr(enum expr_type type, const void *v)
     switch (type) {
         case EXPR_STRING:
         case EXPR_IDENIFIER:
-            expr->value.string = (char *) malloc(strlen((char *) v)+1);
-            strcpy(expr->value.string, (char *) v);
+            expr->value.string = (char *)v;
             break;
         case EXPR_INTEGER:
             expr->value.number = *((long *) v);

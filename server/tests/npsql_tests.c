@@ -143,7 +143,7 @@ void dbug()
 int main(void)
 {
     //test_if_select_can_do_math();
-    //test_if_can_create_table();
+    test_if_can_create_table();
     test_if_can_insert_into();
     //dbug();
 }
