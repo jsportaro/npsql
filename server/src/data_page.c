@@ -155,7 +155,7 @@ page_set_generic(struct data_page *page, SLOTID id, const char *column, void *va
 {
     struct column *cinfo = get_info(page, column);
 
-    if (column == NULL)
+    if (cinfo == NULL)
     {
         return;
     }

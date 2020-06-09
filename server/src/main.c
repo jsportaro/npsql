@@ -18,8 +18,8 @@ void npsql_start(int argc, char *argv[])
     char *data_file = argv[1];
     char *log_file  = argv[2];
 
-    struct query_engine query_engine; 
-    struct session_manager session_manager;
+    struct query_engine query_engine = { 0 }; 
+    struct session_manager session_manager = { 0 }; ;
 
     fprintf(stdout, "Starting npsql\n");
 

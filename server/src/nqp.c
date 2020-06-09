@@ -272,7 +272,10 @@ static void handle_query(struct session *session, size_t payload_size)
     {
         rowset_bytes = new_rowset_buffer();
 
-        say_columns(session, results);
+        if (has_rows(results) == true)
+        {
+            say_columns(session, results);
+        }
 
         while (next_set_record(results))
         {
