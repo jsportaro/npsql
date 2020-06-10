@@ -144,7 +144,7 @@ fetch_table_info(const char *name, struct table_info *ti, PNUM *first_am, struct
                 get_int(&column_catalog, current_rid, type, (int32_t *)&ti->columns[ti->column_count].type);
                 get_int(&column_catalog, current_rid, length_col, (int32_t *)&ti->columns[ti->column_count].size);
                 get_int(&column_catalog, current_rid, offset, (int32_t *)&ti->columns[ti->column_count].offset);
-
+                ti->record_size += ti->columns[ti->column_count].size;
                 ti->column_count++;
             }
         }
