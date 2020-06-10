@@ -5,6 +5,6 @@
 #include <parser.h>
 #include <plans.h>
 
-struct plan * create_plan(struct sql_stmt *sql);
+struct plan * create_plan(struct sql_stmt *sql, struct syscat *cat, struct transaction *tsx);
 
 #endif

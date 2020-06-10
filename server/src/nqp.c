@@ -202,9 +202,9 @@ static void say_columns(struct session *session, struct query_results *results)
     // Payload
     vector_type(struct column) columns = NULL;
     
-    if (results->current_plan->type == PLAN_PROJECT)
+    if (results->current_plan->type == PROJECT_PLAN)
     {
-        columns = ((struct plan_query *)results->current_plan)->column_list;
+        columns = ((struct plan *)results->current_plan)->column_list;
     
         for (size_t i = 0; i < vector_size(columns); i++)
         {

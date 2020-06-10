@@ -77,7 +77,7 @@ void
 test_if_can_insert_into(void)
 {
     struct query_engine engine = { 0 };
-    char *create = "create table people ( age int, name char(30));";
+    char *create = "create table people (age int, name char(30));";
     query_engine_init("test_if_can_insert_into.dat", "test_if_can_insert_into.log", &engine);
 
     struct query_results *results = results = submit_query(&engine, create, strlen(create));
@@ -120,30 +120,9 @@ cleanup:
     fprintf(stdout, "%s passed\n", __func__);
 }
 
-void dbug()
-{
-    struct transaction tsx;
-
-    tsx.locks = NULL;
-    tsx.ctx = malloc(sizeof(struct transaction_context));
-    memset(tsx.ctx, 0, sizeof(struct transaction_context));
-    create_lock_table(&tsx.ctx->locks);
-
-    get_lock(&tsx, 1, true);
-    get_lock(&tsx, 4, true);
-    get_lock(&tsx, 4, true);
-    get_lock(&tsx, 4, true);
-    get_lock(&tsx, 9, true);
-
-    free_lock_table(&tsx.ctx->locks);
-    vector_free(tsx.locks);
-    free(tsx.ctx);
-};
-
 int main(void)
 {
     //test_if_select_can_do_math();
     test_if_can_create_table();
     test_if_can_insert_into();
-    //dbug();
 }
