@@ -5,6 +5,8 @@
 #include <data_page.h>
 #include <storage.h>
 #include <transaction.h>
+#include <types.h>
+#include <values.h>
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -54,6 +56,7 @@ struct record_id heap_insert(struct heap_table *table);
 
 void get_int(struct heap_table *table, struct record_id rid, const char *column, int32_t *value);
 void get_char(struct heap_table *table, struct record_id rid, const char *column, char *value);
+void get_value(struct heap_table *table, struct record_id rid, int ordinal, struct value *value);
 void set_int(struct heap_table *table, struct record_id rid, const char *column, int value);
 void set_char(struct heap_table *table, struct record_id rid, const char *column, char *value);
 

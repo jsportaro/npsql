@@ -3,6 +3,7 @@
 
 enum npsql_type
 {
+    TYPE_UNKNOWN,
     TYPE_INT,
     TYPE_CHAR
 };

@@ -9,6 +9,8 @@
 #include <storage.h>
 #include <transaction.h>
 #include <threads.h>
+#include <types.h>
+#include <value.h>
 
 
 void 
@@ -160,10 +162,87 @@ complete_table()
     free_transaction_context(&ctx);
 }
 
+void
+read_table_with_values()
+{
+    const char *data_path = "complete_table.dat";
+    const char *log_path = "complete_table.log";
+    struct transaction_context ctx = { 0 };
+    
+    file_delete(data_path);
+    file_delete(log_path);
+
+    initialize_transaction_context(&ctx, data_path, log_path);
+    PNUM page_number = INVALID_PNUM;
+
+    struct table_info people_info = { 0 };
+
+    init_table_info(&people_info);
+
+    add_char(&people_info, "name", 4, 15);
+    add_int(&people_info, "age", 3);
+
+    int written = 0;
+    struct transaction *write_tsx = begin_transaction(&ctx);
+    {
+        struct heap_table people = { 0 };
+
+        create_heap_table(&people, &people_info, write_tsx);
+
+        for (int i = 0; i < (23 * 70); i++) //
+        {
+            struct record_id rid = heap_insert(&people);
+
+            set_char(&people, rid, "name", "Heather Portaro");
+            set_int(&people, rid, "age", i + 1);
+
+            written++;
+        }
+        
+        commit(write_tsx);
+    }
+
+    int read = 0;
+    struct transaction *read_tsx = begin_transaction(&ctx);
+    {
+        struct heap_table read_table;
+        struct heap_iterator iterator;
+
+        open_heap_table(&read_table, &people_info, read_tsx, 0);
+        open_heap_iterator(&read_table, &iterator);
+
+        int age = 0;
+        char name[16] = { 0 };
+
+        struct value v = { 0 };
+
+        while (next_record(&iterator))
+        {
+            struct record_id current_rid = iterator.current_record;
+            
+            for (int i = 0; i < read_table.table_info->column_count; i++)
+            {
+                get_value(&read_table, current_rid, i, &v);
+            }
+           
+            read++;
+        }
+        
+        reset(&v)
+
+        commit(read_tsx);
+    }
+
+    assert(written == read);
+
+    free_transaction_context(&ctx);
+}
+
 int main(void)
 {
     single_table_page_write_read();
     complete_table();
+    read_table_with_values();
 
     return EXIT_SUCCESS;
 

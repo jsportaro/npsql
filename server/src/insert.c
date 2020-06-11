@@ -48,6 +48,8 @@ bool execute_insert_into(struct transaction *tsx, struct syscat *cat, struct ins
                     case TYPE_CHAR:
                         set_char(&t, rid, ti.columns[j].name, ((struct term_expr *)i->values[x])->value.string);
                         break;
+                    default:
+                        break;
                 }
             }
         }

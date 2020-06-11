@@ -58,6 +58,7 @@ set (COMMON_SOURCE
     syscat.c
     threads.c
     transaction.c
+    value.c
     wal.c
     ${PARSER_SOURCE}
     )

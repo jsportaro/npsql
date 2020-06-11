@@ -211,6 +211,13 @@ void get_char(struct heap_table *table, struct record_id rid, const char *column
     page_get_char(&page, rid.slot, column, value);
 }
 
+void get_value(struct heap_table *table, struct record_id rid, int ordinal, struct value *value)
+{
+    struct data_page page;
+    open_data_page(rid.pid, &page, table->table_info, table->tsx);
+    page_get_value(&page, rid.slot, ordinal, value);
+}
+
 void set_int(struct heap_table *table, struct record_id rid, const char *column, int value)
 {
     struct data_page page;

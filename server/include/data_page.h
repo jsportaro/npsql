@@ -2,6 +2,8 @@
 #define __DATA_PAGE_H__
 
 #include <storage.h>
+#include <types.h>
+#include <value.h>
 
 typedef uint16_t SLOTID;
 
@@ -46,6 +48,7 @@ SLOTID next_page_record(struct data_page_iterator *iterator);
 
 void page_get_int(struct data_page *page, SLOTID handle, const char *column, int32_t *value);
 void page_get_char(struct data_page *page, SLOTID handle, const char *column, char *value);
+void page_get_value(struct data_page *page, SLOTID id, int ordinal, struct value *value);
 void page_set_int(struct data_page *page, SLOTID handle, const char *column, int value);
 void page_set_char(struct data_page *page, SLOTID handle, const char *column, char *value);
 

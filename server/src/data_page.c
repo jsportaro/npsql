@@ -1,6 +1,9 @@
+#include <buffers.h>
 #include <data_page.h>
 #include <storage.h>
 #include <transaction.h>
+#include <types.h>
+#include <values.h>
 
 #define HEADER_OFFSET 0
 #define SLOT_ARRAY_OFFSET (sizeof(struct data_page_header))
@@ -108,6 +111,33 @@ void
 page_get_char(struct data_page *page, SLOTID id, const char *column, char *value)
 {
     page_get_generic(page, id, column, value);
+}
+
+void
+page_get_value(struct data_page *page, SLOTID id, int ordinal, struct value *value)
+{
+    RECORD_HANDLE handle = INVALID_RECORD_HANDLE;
+
+    struct column *cinfo = &page->table->columns[ordinal];
+
+    uint8_t *s = malloc(cinfo->size);
+    assert(s != NULL);
+
+    transactional_read(
+        page->tsx, 
+        page->page_number, 
+        &handle, 
+        SLOT_ARRAY_OFFSET + (sizeof(uint16_t) * id), 
+        sizeof(uint16_t));
+
+    transactional_read(
+        page->tsx, 
+        page->page_number, 
+        s, 
+        handle - cinfo->offset - cinfo->size, 
+        cinfo->size);
+
+    deserialize(value, cinfo->type, s, cinfo->size);
 }
 
 void 
