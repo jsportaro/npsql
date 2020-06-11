@@ -1,6 +1,7 @@
 #ifndef __PLANS_H__
 #define __PLANS_H__
 
+#include <query_context.h>
 #include <scans.h>
 #include <sql.h>
 #include <storage.h>
@@ -29,7 +30,7 @@ struct project_plan
     enum plan_type type;
     struct scan * (*open)(struct plan *project);
     vector_type(struct column) column_list;
-    vector_type(struct expr *) expr_list;
+    vector_type(struct expr_ctx) expr_list;
 
     struct plan *p;
 };
@@ -42,7 +43,7 @@ struct select_plan
     vector_type(struct expr *) expr_list;
     
     struct plan *p;
-    struct expr *where_predicate;
+    struct expr *where_clause;
 };
 
 struct product_plan
@@ -61,13 +62,15 @@ struct table_plan
     enum plan_type type;
     struct scan *(*open)(struct plan *plan);
     vector_type(struct column) column_list;
-    struct table_info *ti;
+
+    struct query_ctx *ctx;
+    struct table_info ti;
     PNUM first_am;
 };
 
 
 struct plan * new_no_data_select_plan(struct select *select);
-struct plan * new_select_stmt_plan(struct select *select, struct syscat *cat, struct transaction *tsx);
+struct plan * new_select_stmt_plan(struct select *select, struct query_ctx *ctx);
 
 void free_plan(struct plan *plan);
 

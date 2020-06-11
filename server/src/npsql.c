@@ -54,6 +54,9 @@ struct query_results * submit_query(struct query_engine *query_engine, char *que
     results->engine = query_engine;     
     results->tsx = begin_transaction(&results->engine->ctx);
 
+    results->ctx.cat = &results->engine->cat;
+    results->ctx.tsx = results->tsx;
+
     return results;
 }
 
@@ -80,10 +83,12 @@ bool get_next_set(struct query_results *r)
 
     free_plan(r->current_plan);
     free_scan(r->current_scan);
-    
+
+
+
     if (s->type == STMT_SELECT)
     {
-        r->current_plan =  create_plan(s);
+        r->current_plan =  create_plan(s, &r->ctx);
         r->current_scan = r->current_plan->open(r->current_plan);
         r->next_stmt++;
     }
@@ -107,7 +112,6 @@ bool get_next_set(struct query_results *r)
 
     r->next_stmt++;
 
-
     return true;
 }
 
@@ -123,7 +127,9 @@ bool next_set_record(struct query_results *r)
 {
     if (r->current_scan != NULL)
     {
-        return r->current_scan->next(r->current_scan);
+        bool n = r->current_scan->next(r->current_scan);
+
+        return n;
     }
     else
     {

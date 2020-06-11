@@ -34,6 +34,12 @@ enum expr_type
     EXPR_COMPARISON
 };
 
+struct expr_ctx
+{
+    struct expr *expr;
+    vector_type(char *) unresolved;
+};
+
 struct expr
 {
     enum expr_type type;
@@ -67,7 +73,7 @@ struct select
 {
     enum stmt_type type;
 
-    vector_type(struct expr *) expr_list;
+    vector_type(struct expr_ctx) expr_ctx_list;
     vector_type(struct table_ref *) table_refs;
 
     struct expr *where;
@@ -100,8 +106,6 @@ struct column_def
     struct type_def *type;
 };
 
-
-
 struct sql_stmts
 {
     vector_type(struct sql_stmts *) stmts;
@@ -113,24 +117,28 @@ struct parsed_sql
     bool error;
     
     vector_type(struct sql_stmt *) stmts;
+    vector_type(char *) unresolved;
 };
 
 void append_stmt(vector_type(struct sql_stmt *) stmt_list, struct sql_stmt * stmt);
 
 struct sql_stmt * new_select_data(
-    vector_type(struct expr *) expr_list, 
+    vector_type(struct expr_ctx) expr_ctx_list, 
     vector_type(struct table_ref *) table_refs, 
     struct expr *where);
 
-struct sql_stmt * new_select(vector_type(struct expr *) expr_list);
+struct sql_stmt * new_select(vector_type(struct expr_ctx) expr_list);
 
-vector_type(struct expr *) new_expr_list(struct expr *expr);
-vector_type(struct expr *) append_expr_list(vector_type(struct expr *) expr_list, struct expr *expr);
+vector_type(struct expr *) new_expr_list(struct expr *expr, vector_type(char *) unresolved);
+vector_type(struct expr *) append_expr_list(vector_type(struct expr *) expr_list, struct expr *expr, vector_type(char *) unresolved);
+
+vector_type(struct expr_ctx) new_expr_ctx_list(struct expr *expr, vector_type(char *) unresolved);
+vector_type(struct expr_ctx) append_expr_ctx_list(vector_type(struct expr_ctx) expr_ctx_list, struct expr *expr, vector_type(char *) unresolved);
 
 vector_type(struct table_ref *) new_table_list(struct table_ref * table_ref);
 struct table_ref * new_table_ref(const char *name);
 
-struct expr * new_term_expr(enum expr_type type, const void *v);
+struct term_expr * new_term_expr(enum expr_type type, const void *v);
 struct expr * new_infix_expr(enum expr_type type, struct expr *l, struct expr *r);
 
 struct sql_stmt * new_create_table(const char *name, vector_type(struct column_def *) column_defs);

@@ -16,7 +16,20 @@
         "utility": "c",
         "algorithm": "cpp",
         "create_table.h": "c",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "planner.h": "c",
+        "istream": "c",
+        "ostream": "c",
+        "tuple": "c",
+        "cmath": "cpp",
+        "exception": "cpp",
+        "memory": "cpp",
+        "memory_resource": "cpp",
+        "optional": "cpp",
+        "iosfwd": "cpp",
+        "limits": "cpp",
+        "new": "cpp",
+        "streambuf": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

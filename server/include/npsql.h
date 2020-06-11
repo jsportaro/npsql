@@ -4,6 +4,7 @@
 #include <common.h>
 #include <vector.h>
 #include <parser.h>
+#include <query_context.h>
 #include <sql.h>
 #include <syscat.h>
 #include <transaction.h>
@@ -33,6 +34,7 @@ struct query_results
     struct scan          *current_scan;
     struct query_engine  *engine;
     struct transaction   *tsx;
+    struct query_ctx      ctx;
 };
 
 

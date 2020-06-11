@@ -51,7 +51,8 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 %token WHERE
 
 %type <struct sql_stmt *> stmt select_stmt create_table_stmt insert_stmt
-%type <vector_type(struct expr *)> select_expr_list value_list
+%type <vector_type(struct expr_ctx)> select_expr_list
+%type <vector_type(struct expr *)> value_list
 %type <vector_type(struct table_ref *)> table_references
 %type <vector_type(struct column_def *)> create_col_list
 %type <struct table_ref *> table_reference
@@ -84,9 +85,19 @@ select_stmt:
 ;  
 
 select_expr_list: 
-    select_expr                      { $$ = new_expr_list($1);          }
-  | select_expr_list ',' select_expr { $$ = append_expr_list($1, $3);   }
-  | '*'                              { $$ = new_expr_list(NULL);}
+    select_expr                      { 
+                                        $$ = new_expr_ctx_list($1, parsed->unresolved); 
+                                        vector_free(parsed->unresolved); 
+                                        parsed->unresolved = NULL; 
+                                     }
+
+  | select_expr_list ',' select_expr { 
+                                        $$ = append_expr_ctx_list($1, $3, parsed->unresolved); 
+                                        vector_free(parsed->unresolved); 
+                                        parsed->unresolved = NULL;  
+                                     }
+
+  | '*'                              { $$ = new_expr_ctx_list(NULL, NULL); }
 ;
 
 select_expr:
@@ -139,14 +150,18 @@ column_list:
 ;
 
 value_list: 
-    expr                             { $$ = new_expr_list($1);          }
-  | value_list ',' expr              { $$ = append_expr_list($1, $3);   }
+    expr                             { $$ = new_expr_list($1, parsed->unresolved); vector_free(parsed->unresolved); parsed->unresolved = NULL;          }
+  | value_list ',' expr              { $$ = append_expr_list($1, $3, parsed->unresolved); vector_free(parsed->unresolved); parsed->unresolved = NULL;  }
 ;
 
 expr:
-    "identifier"                     { $$ = new_term_expr(EXPR_IDENIFIER, $1); }
-  | "string"                         { $$ = new_term_expr(EXPR_STRING,    $1); }
-  | "integer"                        { $$ = new_term_expr(EXPR_INTEGER,   (const void *)(&$1)); }
+    "string"                         { $$ =  (struct expr *)new_term_expr(EXPR_STRING,    $1); }
+  | "integer"                        { $$ =  (struct expr *)new_term_expr(EXPR_INTEGER,   (const void *)(&$1)); }
+  | "identifier"                     { 
+                                        struct term_expr *t = new_term_expr(EXPR_IDENIFIER, $1); 
+                                        vector_push(parsed->unresolved, t->value.string); 
+                                        $$ = (struct expr *)t; 
+                                     }
 ;
 
 expr: 

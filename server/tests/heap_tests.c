@@ -228,7 +228,7 @@ read_table_with_values()
             read++;
         }
         
-        reset(&v)
+        reset(&v);
 
         commit(read_tsx);
     }
