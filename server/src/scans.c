@@ -1,10 +1,17 @@
 
 #include <common.h>
+#include <defaults.h>
 #include <buffers.h>
 #include <heap_table.h>
 #include <query_context.h>
 #include <scans.h>
 #include <storage.h>
+
+struct resolved_value
+{
+    struct value v;
+    char *name;
+};
 
 static bool 
 select_scan_next(struct scan *scan);
@@ -17,6 +24,36 @@ table_scan_next(struct scan *scan);
 
 static void
 table_scan_get_value(struct scan *scan, char *name, struct value *v);
+
+void
+resolve(vector_type(struct resolved_value) values, char *name, struct value *v)
+{
+    for (size_t i = 0; i < vector_size(values); i++)
+    {
+        if (strncmp(name, values[i].name, MAX_COLUMN_NAME) == 0)
+        {
+            *v = values[i].v;
+        }
+    }
+
+}
+
+struct value
+eval_expr(struct expr *expr, vector_type(struct resolved_value) resolved)
+{
+    struct term_expr *term;
+    struct value v;
+    switch(expr->type)
+    {
+        case EXPR_IDENIFIER:
+            term = (struct term_expr *)expr;
+            resolve(resolved, term->value.string, &v);
+
+            return v;
+        default:
+            exit(EXIT_FAILURE);
+    }
+}
 
 struct scan_field
 eval(struct expr *expr)
@@ -100,8 +137,8 @@ scan_project_next(struct scan *scan)
         //  Evaluate expressions and return;
         for (size_t i = 0; i < vector_size(sp->expr_list); i++)
         {
-            struct expr_ctx expr_ctx = sp->expr_list[i];
-            struct scan_field r = eval(expr_ctx.expr);
+            struct expr_ctx *expr_ctx = sp->expr_list[i];
+            struct scan_field r = eval(expr_ctx->expr);
 
             vector_push(scan_fields, r);
         }
@@ -112,7 +149,7 @@ scan_project_next(struct scan *scan)
 }
 
 struct scan * 
-new_scan_project(vector_type(struct expr_ctx) expr_list, struct scan *scan)
+new_scan_project(vector_type(struct expr_ctx *) expr_list, struct scan *scan)
 {
     struct scan_project *sp = malloc(sizeof(struct scan_project));
 
@@ -154,11 +191,36 @@ project_scan_get_value(struct scan *scan, char *column_name, struct value *value
 {
     struct project_scan *ps = (struct project_scan *)scan;
 
-    ps->scan->get_value(ps->scan, column_name, value);
+    size_t i = 0;
+
+    for (; i < vector_size(ps->expr_list); i++)
+    {
+        if (strncmp(column_name, ps->expr_list[i]->col_name, MAX_COLUMN_NAME) == 0)
+        {
+            break;
+        }
+    }
+
+    vector_type(struct resolved_value) values = NULL;
+    struct value v;
+    struct resolved_value rv;
+    vector_type(char *) c = ps->expr_list[i]->unresolved;
+    size_t s = vector_size(c);
+    for (size_t j = 0; j < s; j++)
+    {
+        ps->scan->get_value(ps->scan, ps->expr_list[i]->unresolved[j], &v);
+        rv.name = ps->expr_list[i]->unresolved[j];
+        rv.v = v;
+        vector_push(values, rv);
+    }
+
+    *value = eval_expr(ps->expr_list[i]->expr, values);
+
+    return;
 }
 
 struct scan * 
-new_project_scan(struct scan *inner, vector_type(struct expr_ctx) expr_ctx_list)
+new_project_scan(struct scan *inner, vector_type(struct expr_ctx *) expr_ctx_list)
 {
     struct project_scan *ps = malloc(sizeof(struct project_scan));
     assert(ps != NULL);
@@ -166,7 +228,6 @@ new_project_scan(struct scan *inner, vector_type(struct expr_ctx) expr_ctx_list)
     ps->type = PROJECT_SCAN;
     ps->scan = inner;
     ps->expr_list = expr_ctx_list;
-    ps->fields = vector_size(expr_ctx_list);
     ps->next = &project_scan_next;
     ps->get_value = &project_scan_get_value;
 
@@ -184,7 +245,7 @@ new_select_scan(struct scan *inner, struct expr *where_clause)
     ss->where_clause = where_clause;
     ss->next = &select_scan_next;
     ss->get_value = &select_scan_get_value;
-
+    
     return (struct scan *)ss;
 }
 

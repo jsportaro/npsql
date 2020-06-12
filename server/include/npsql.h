@@ -41,6 +41,7 @@ struct query_results
 int query_engine_init(const char *data_file, const char *log_file, struct query_engine *query_engine);
 void free_query_engine(struct query_engine *query_engine);
 struct query_results * submit_query(struct query_engine *query_engine, char *query, size_t length);
+vector_type(struct expr_ctx *) get_sql_select(struct query_results *r);
 bool get_next_set(struct query_results *results);
 bool has_rows(struct query_results *r);
 bool next_set_record(struct query_results *results);

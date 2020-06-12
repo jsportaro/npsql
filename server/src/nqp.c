@@ -286,19 +286,19 @@ static void handle_query(struct session *session, size_t payload_size)
 
             vector_type(uint8_t) bytes = NULL;
             vector_grow(bytes, MAX_MESSAGE_SIZE);
-            vector_type(struct scan_field) fields = results->current_scan->scan_fields;
-            for (size_t i = 0; i < vector_size(fields); i++)
-            {
-                struct scan_field field = fields[i];
-                switch (field.type)
-                {
-                    case TYPE_INT:
-                        push_uint32(bytes, field.value.number);
-                        break;
-                    default:
-                        break;
-                }
-            }
+            // vector_type(struct scan_field) fields = results->current_scan->scan_fields;
+            // for (size_t i = 0; i < vector_size(fields); i++)
+            // {
+            //     struct scan_field field = fields[i];
+            //     switch (field.type)
+            //     {
+            //         case TYPE_INT:
+            //             push_uint32(bytes, field.value.number);
+            //             break;
+            //         default:
+            //             break;
+            //     }
+            //}
             size_t b_size =  vector_size(bytes);
             uint8_t *row_start = &rowset_bytes[vector_size(rowset_bytes)];
             memcpy(row_start, bytes, b_size);

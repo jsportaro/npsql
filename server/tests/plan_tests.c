@@ -80,9 +80,11 @@ int main(void)
     {
         while (next_set_record(results))
         {
-            for (int i = 0; i <10 ; i++)
+            vector_type(struct expr_ctx *) e = get_sql_select(results);
+
+            for (int i = 0; i < vector_size(e); i++)
             {
-                results->current_scan->get_value(results->current_scan, "age", &v);
+                results->current_scan->get_value(results->current_scan, e[i]->col_name, &v);
             }
         }
     }

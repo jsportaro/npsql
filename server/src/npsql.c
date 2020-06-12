@@ -84,13 +84,10 @@ bool get_next_set(struct query_results *r)
     free_plan(r->current_plan);
     free_scan(r->current_scan);
 
-
-
     if (s->type == STMT_SELECT)
     {
         r->current_plan =  create_plan(s, &r->ctx);
         r->current_scan = r->current_plan->open(r->current_plan);
-        r->next_stmt++;
     }
     else if (s->type == STMT_CREATE_TABLE)
     {
@@ -107,12 +104,26 @@ bool get_next_set(struct query_results *r)
         r->current_scan = NULL;
 
         execute_insert_into(r->tsx, &r->engine->cat, (struct insert *)s);
-
     }
 
     r->next_stmt++;
 
     return true;
+}
+
+vector_type(struct expr_ctx *) 
+get_sql_select(struct query_results *r)
+{
+    struct sql_stmt *s = r->parsed_sql->stmts[r->next_stmt - 1];
+
+    if (s->type != STMT_SELECT)
+    {
+        return NULL;
+    }
+
+    struct select *select = (struct select *)s;
+
+    return select->expr_ctx_list;
 }
 
 void free_results(struct query_results *r)
