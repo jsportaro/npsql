@@ -30,7 +30,7 @@ struct project_plan
     enum plan_type type;
     struct scan * (*open)(struct plan *project);
     vector_type(struct column) column_list;
-    vector_type(struct expr_ctx) expr_list;
+    vector_type(struct expr_ctx *) expr_list;
 
     struct plan *p;
 };

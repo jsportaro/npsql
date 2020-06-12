@@ -31,7 +31,7 @@ open_project_scan(struct plan *plan)
 }
 
 struct plan *
-new_project_plan(struct plan *p, vector_type(struct expr_ctx) expr_list)
+new_project_plan(struct plan *p, vector_type(struct expr_ctx *) expr_list)
 {
     struct project_plan *pp = malloc(sizeof(struct project_plan));
     assert(pp != NULL);
@@ -217,7 +217,7 @@ bind_columns(struct select *select)
 
     for (size_t i = 0; i < vector_size(select->expr_ctx_list); i++)
     {
-        struct expr *expr = select->expr_ctx_list[i].expr;
+        struct expr *expr = select->expr_ctx_list[i]->expr;
         struct column c = bind_column(expr);
         vector_push(pc, c);
     }
