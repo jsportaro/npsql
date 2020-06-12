@@ -51,7 +51,7 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 %token WHERE
 
 %type <struct sql_stmt *> stmt select_stmt create_table_stmt insert_stmt
-%type <vector_type(struct expr_ctx)> select_expr_list
+%type <vector_type(struct expr_ctx *)> select_expr_list
 %type <vector_type(struct expr *)> value_list
 %type <vector_type(struct table_ref *)> table_references
 %type <vector_type(struct column_def *)> create_col_list
@@ -87,13 +87,11 @@ select_stmt:
 select_expr_list: 
     select_expr                      { 
                                         $$ = new_expr_ctx_list($1, parsed->unresolved); 
-                                        vector_free(parsed->unresolved); 
                                         parsed->unresolved = NULL; 
                                      }
 
   | select_expr_list ',' select_expr { 
                                         $$ = append_expr_ctx_list($1, $3, parsed->unresolved); 
-                                        vector_free(parsed->unresolved); 
                                         parsed->unresolved = NULL;  
                                      }
 
