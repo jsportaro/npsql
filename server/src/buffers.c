@@ -92,7 +92,7 @@ void write_uint64(uint8_t *dest, uint32_t start, const uint64_t number)
 
 uint16_t read_uint16(const uint8_t *src, uint32_t start)
 {
-    union i16_u n;// = {{ *n.c = src[start]}};
+    union i16_u n;
 
     memcpy(n.c, &src[start], sizeof(uint16_t));
 
@@ -101,7 +101,7 @@ uint16_t read_uint16(const uint8_t *src, uint32_t start)
 
 uint32_t read_uint32(const uint8_t *src, uint32_t start)
 {
-    union i32_u n;// = {{ *n.c = src[start]}};
+    union i32_u n;
 
     memcpy(n.c, &src[start], sizeof(uint32_t));
 
@@ -110,7 +110,7 @@ uint32_t read_uint32(const uint8_t *src, uint32_t start)
 
 uint64_t read_uint64(const uint8_t *src, uint32_t start)
 {
-    union i64_u n;// = {{ *n.c = src[start]}};
+    union i64_u n;
 
     memcpy(n.c, &src[start], sizeof(uint64_t));
 

@@ -10,35 +10,31 @@
 #include <stdlib.h>
 #include <string.h>
 
-static vector_type(struct column) 
-bind_columns(struct select *select);
-
-static struct scan * 
-open_no_data_select_scan(struct plan *plan)
-{
-    struct project_plan *p = (struct project_plan *)plan;
-    
-    return new_scan_project(p->expr_list, NULL);
-}
-
 static struct scan * 
 open_project_scan(struct plan *plan)
 {
     struct project_plan *pp = (struct project_plan *)plan;
     
-    return new_project_scan(pp->p->open(pp->p), pp->expr_list);
+    return new_project_scan(pp->p->open(pp->p));
 
 }
 
+bool project_plan_get_column(struct plan *plan, char *name, struct plan_column *column)
+{
+    struct project_plan *pp = (struct project_plan *)plan;
+
+    return pp->p->get_column(pp->p, name, column);
+}
+
 struct plan *
-new_project_plan(struct plan *p, vector_type(struct expr_ctx *) expr_list)
+new_project_plan(struct plan *p)
 {
     struct project_plan *pp = malloc(sizeof(struct project_plan));
     assert(pp != NULL);
     pp->type = PROJECT_PLAN;
     pp->p = p;
-    pp->expr_list = expr_list;
     pp->open = &open_project_scan;
+    pp->get_column = &project_plan_get_column;
 
     return (struct plan *)pp;
 }
@@ -51,6 +47,13 @@ open_select_scan(struct plan *plan)
     return new_select_scan(sp->p->open(sp->p), sp->where_clause);
 }
 
+bool select_scan_get_column(struct plan *plan, char *name, struct plan_column *column)
+{
+    struct select_plan *sp = (struct select_plan *)plan;
+
+    return sp->p->get_column(sp->p, name, column);
+}
+
 struct plan *
 new_select_plan(struct plan *p, struct expr *where_clause)
 {
@@ -60,6 +63,7 @@ new_select_plan(struct plan *p, struct expr *where_clause)
     sp->p = p;
     sp->where_clause = where_clause;
     sp->open = &open_select_scan;
+    sp->get_column = &select_scan_get_column;
 
     return (struct plan *)sp;
 }
@@ -72,6 +76,17 @@ open_product_scan(struct plan *plan)
     return new_product_scan(pp->l->open(pp->l), pp->r->open(pp->r));
 }
 
+bool product_scan_get_column(struct plan *plan, char *name, struct plan_column *column)
+{
+    struct product_plan *pp = (struct product_plan *)plan;
+
+    UNUSED(pp);
+    UNUSED(name);
+    UNUSED(column);
+    //TODO
+    return true;
+}
+
 struct plan *
 new_product_plan(struct plan *l, struct plan *r)
 {
@@ -81,6 +96,7 @@ new_product_plan(struct plan *l, struct plan *r)
     pp->r = r;
     pp->l = l;
     pp->open = &open_project_scan;
+    pp->get_column = &product_scan_get_column;
 
     return (struct plan *)pp;
 }
@@ -93,6 +109,25 @@ open_table_scan(struct plan *plan)
     return new_table_scan(&tp->ti, tp->first_am, tp->ctx);   
 }
 
+bool table_scan_get_column(struct plan *plan, char *name, struct plan_column *column)
+{
+    struct table_plan *tp = (struct table_plan *)plan;
+
+    for (size_t i = 0; i < tp->ti.column_count; i++)
+    {
+        if (strcmp(tp->ti.columns[i].name, name) == 0)
+        {
+            column->name = tp->ti.columns[i].name;
+            column->size = tp->ti.columns[i].size;
+            column->type = tp->ti.columns[i].type;
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
 struct plan *
 new_table_plan(struct table_ref *table_ref, struct query_ctx *ctx)
 {
@@ -102,23 +137,11 @@ new_table_plan(struct table_ref *table_ref, struct query_ctx *ctx)
     tp->type = TABLE_PLAN;
     tp->open = &open_table_scan;
     tp->ctx = ctx;
-
+    tp->get_column = &table_scan_get_column;
+    
     fetch_table_info(table_ref->table_name, &tp->ti, &tp->first_am, ctx->cat, ctx->tsx);
 
     return (struct plan *)tp;
-}
-
-struct plan * 
-new_no_data_select_plan(struct select *select)
-{
-    struct project_plan *p = malloc(sizeof(struct project_plan));
-
-    p->type = PROJECT_PLAN;
-    p->expr_list = select->expr_ctx_list;
-    p->column_list = bind_columns(select);
-    p->open = &open_no_data_select_scan;
-
-    return (struct plan *)p;
 }
 
 struct plan * 
@@ -146,7 +169,7 @@ new_select_stmt_plan(struct select *select, struct query_ctx *ctx)
         p = new_select_plan(p, select->where);
     }
 
-    p = new_project_plan(p, select->expr_ctx_list);
+    p = new_project_plan(p);
     vector_free(table_plans);
 
     return p;
@@ -210,29 +233,6 @@ end:
     return r;
 }
 
-static vector_type(struct column) 
-bind_columns(struct select *select)
-{
-    vector_type(struct column) pc = NULL;
-
-    for (size_t i = 0; i < vector_size(select->expr_ctx_list); i++)
-    {
-        struct expr *expr = select->expr_ctx_list[i]->expr;
-        struct column c = bind_column(expr);
-        vector_push(pc, c);
-    }
-
-    return pc;
-}
-
-static void
-free_project_plan(struct project_plan *p)
-{
-    // Note: do not free pp->expr_list
-    //       it "belongs" to struct select
-    vector_free(p->column_list);
-}
-
 void 
 free_plan(struct plan *p)
 {
@@ -250,7 +250,6 @@ free_plan(struct plan *p)
     {
         case PROJECT_PLAN:
             project = (struct project_plan *)p;
-            free_project_plan(project);
             free_plan(project->p);
             free(project);
             project = NULL;

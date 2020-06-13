@@ -177,7 +177,6 @@ free_scan_project(struct scan *s)
     sp->expr_list = NULL;
 }
 
-
 bool 
 project_scan_next(struct scan *scan)
 {
@@ -190,44 +189,20 @@ void
 project_scan_get_value(struct scan *scan, char *column_name, struct value *value)
 {
     struct project_scan *ps = (struct project_scan *)scan;
-
-    size_t i = 0;
-
-    for (; i < vector_size(ps->expr_list); i++)
-    {
-        if (strncmp(column_name, ps->expr_list[i]->col_name, MAX_COLUMN_NAME) == 0)
-        {
-            break;
-        }
-    }
-
-    vector_type(struct resolved_value) values = NULL;
-    struct value v;
-    struct resolved_value rv;
-    vector_type(char *) c = ps->expr_list[i]->unresolved;
-    size_t s = vector_size(c);
-    for (size_t j = 0; j < s; j++)
-    {
-        ps->scan->get_value(ps->scan, ps->expr_list[i]->unresolved[j], &v);
-        rv.name = ps->expr_list[i]->unresolved[j];
-        rv.v = v;
-        vector_push(values, rv);
-    }
-
-    *value = eval_expr(ps->expr_list[i]->expr, values);
-
+    
+    ps->scan->get_value(ps->scan, column_name, value);
+    
     return;
 }
 
 struct scan * 
-new_project_scan(struct scan *inner, vector_type(struct expr_ctx *) expr_ctx_list)
+new_project_scan(struct scan *inner)
 {
     struct project_scan *ps = malloc(sizeof(struct project_scan));
     assert(ps != NULL);
 
     ps->type = PROJECT_SCAN;
     ps->scan = inner;
-    ps->expr_list = expr_ctx_list;
     ps->next = &project_scan_next;
     ps->get_value = &project_scan_get_value;
 

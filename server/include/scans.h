@@ -53,9 +53,7 @@ struct project_scan
     enum scan_type type;
     bool (*next)(struct scan *scan);
     void (*get_value)(struct scan *scan, char *column_name, struct value *value);
-
     struct scan *scan;
-    vector_type(struct expr_ctx *) expr_list;
 };
 
 struct select_scan
@@ -63,9 +61,8 @@ struct select_scan
     enum scan_type type;
     bool (*next)(struct scan *scan);
     void (*get_value)(struct scan *scan, char *column_name, struct value *value);
-    int fields;
-
     struct scan *scan;
+
     struct expr *where_clause;
 };
 
@@ -82,7 +79,7 @@ struct table_scan
     enum scan_type type;
     bool (*next)(struct scan *scan);
     void (*get_value)(struct scan *scan, char *column_name, struct value *value);
-    int fields;
+    struct scan *scan;
 
     struct table_info *ti;
     struct heap_table ht;
@@ -91,7 +88,7 @@ struct table_scan
 
 struct scan * new_scan_project(vector_type(struct expr_ctx *) expr_list, struct scan *scan);
 
-struct scan * new_project_scan(struct scan *inner, vector_type(struct expr_ctx *) expr_list);
+struct scan * new_project_scan(struct scan *inner);
 struct scan * new_select_scan(struct scan *inner, struct expr *where_clause);
 struct scan * new_product_scan(struct scan *l, struct scan *r);
 struct scan * new_table_scan(struct table_info *ti, PNUM first_am, struct query_ctx *ctx);

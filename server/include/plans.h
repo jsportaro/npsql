@@ -18,19 +18,25 @@ enum plan_type
     CREATE_TABLE
 };
 
+struct plan_column
+{
+    size_t size;
+    char *name;
+    enum npsql_type type;
+};
+
 struct plan
 {
     enum plan_type type;
     struct scan *(*open)(struct plan *plan);
-    vector_type(struct column) column_list;
+    bool (*get_column)(struct plan *plan, char *name, struct plan_column *column);
 };
 
 struct project_plan
 {
     enum plan_type type;
     struct scan * (*open)(struct plan *project);
-    vector_type(struct column) column_list;
-    vector_type(struct expr_ctx *) expr_list;
+    bool (*get_column)(struct plan *plan, char *name, struct plan_column *column);
 
     struct plan *p;
 };
@@ -39,8 +45,7 @@ struct select_plan
 {
     enum plan_type type;
     struct scan * (*open)(struct plan *project);
-    vector_type(struct column) column_list;
-    vector_type(struct expr *) expr_list;
+    bool (*get_column)(struct plan *plan, char *name, struct plan_column *column);
     
     struct plan *p;
     struct expr *where_clause;
@@ -50,8 +55,7 @@ struct product_plan
 {
     enum plan_type type;
     struct scan * (*open)(struct plan *project);
-    vector_type(struct column) column_list;
-    vector_type(struct expr *) expr_list;
+    bool (*get_column)(struct plan *plan, char *name, struct plan_column *column);
 
     struct plan *l;
     struct plan *r;
@@ -61,7 +65,7 @@ struct table_plan
 {
     enum plan_type type;
     struct scan *(*open)(struct plan *plan);
-    vector_type(struct column) column_list;
+    bool (*get_column)(struct plan *plan, char *name, struct plan_column *column);
 
     struct query_ctx *ctx;
     struct table_info ti;
