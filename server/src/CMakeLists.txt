@@ -43,6 +43,7 @@ set (COMMON_SOURCE
     create_table.c
     data_file.c
     data_page.c
+    expr_eval.c
     file.c
     heap_table.c
     insert.c
