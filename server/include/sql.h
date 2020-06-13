@@ -39,6 +39,7 @@ struct expr_ctx
     struct expr *expr;
     char *col_name;
     vector_type(char *) unresolved;
+    enum npsql_type type;
 };
 
 struct expr

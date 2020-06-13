@@ -19,6 +19,58 @@ create_plan(struct sql_stmt *sql, struct query_ctx *ctx)
     return plan;
 }
 
+enum npsql_type 
+lookup(vector_type(struct plan_column) c, char *n)
+{
+    for (size_t i = 0; i < vector_size(c); i++)
+    {
+        if (strcmp(c[i].name, n) == 0)
+        {
+            return c[i].type;
+        }
+    }
+    
+    return TYPE_UNKNOWN;
+}
+
+enum npsql_type 
+resolve_type(struct expr *e, vector_type(struct plan_column) c)
+{
+    struct term_expr *term;
+    struct infix_expr *infix = NULL;
+
+    switch (e->type)
+    {
+        case EXPR_IDENIFIER:
+            term = (struct term_expr *)e;
+            return lookup(c, term->value.string);
+        case EXPR_INTEGER:
+            return TYPE_INT;
+        case EXPR_STRING:
+            return TYPE_CHAR;
+        case EXPR_ADD:
+        case EXPR_SUB:
+        case EXPR_MUL:
+        case EXPR_DIV:
+            infix = (struct infix_expr *)e;
+            enum npsql_type tl = resolve_type(infix->l, c);
+            enum npsql_type tr = resolve_type(infix->r, c);
+
+            if (tl == tr)
+            {
+                return tl;
+            }
+            else
+            {
+                return TYPE_UNKNOWN;
+            }
+
+            break;
+        default:
+            return TYPE_UNKNOWN;
+    }
+}
+
 struct plan * 
 create_select_plan(struct select *select, struct query_ctx *ctx)
 {
@@ -44,7 +96,15 @@ create_select_plan(struct select *select, struct query_ctx *ctx)
             }
         }
 
-        //  Now, Need to see what type it'll be
+        enum npsql_type t = resolve_type(select->expr_ctx_list[i]->expr, columns);
+        
+        if (t == TYPE_UNKNOWN)
+        {
+            return NULL;
+        }
+        select->expr_ctx_list[i]->type = t;
+        vector_free(columns);
+        columns = NULL;
 
     }
 
