@@ -1,12 +1,12 @@
 #include <planner.h>
 
-struct plan * 
+struct planner_result *
 create_select_plan(struct select *select, struct query_ctx *ctx);
 
-struct plan * 
+struct planner_result *
 create_plan(struct sql_stmt *sql, struct query_ctx *ctx)
 {
-    struct plan *plan = NULL;
+    struct planner_result *plan = NULL;
     switch(sql->type)
     {
         case STMT_SELECT:
@@ -71,12 +71,14 @@ resolve_type(struct expr *e, vector_type(struct plan_column) c)
     }
 }
 
-struct plan * 
+struct planner_result *
 create_select_plan(struct select *select, struct query_ctx *ctx)
 {
+    struct planner_result *result = malloc(sizeof(struct planner_result));
     struct plan *plan = new_select_stmt_plan(select, ctx);
 
-    vector_type(struct plan_column) columns = NULL;
+    result->plan = plan;
+    result->columns = NULL;
 
     for(size_t i = 0; i < vector_size(select->expr_ctx_list); i++)
     {
@@ -85,28 +87,26 @@ create_select_plan(struct select *select, struct query_ctx *ctx)
             struct plan_column c;
             bool found = plan->get_column(plan, select->expr_ctx_list[i]->unresolved[j], &c);
 
-            if (found)
+            if (found == true)
             {
-                vector_push(columns, c);
+                vector_push(result->columns, c);
             }
             else
             {
-                vector_free(columns);
+                vector_free(result->columns);
                 return NULL;
             }
         }
 
-        enum npsql_type t = resolve_type(select->expr_ctx_list[i]->expr, columns);
+        enum npsql_type t = resolve_type(select->expr_ctx_list[i]->expr, result->columns);
         
         if (t == TYPE_UNKNOWN)
         {
             return NULL;
         }
         select->expr_ctx_list[i]->type = t;
-        vector_free(columns);
-        columns = NULL;
 
     }
 
-    return plan;
+    return result;
 }

@@ -7,6 +7,6 @@
 
 #include <stdbool.h>
 
-struct value eval(struct expr_ctx *ctx, struct scan *sscan);
+struct value eval(struct expr *expr, struct scan *sscan);
 
 #endif

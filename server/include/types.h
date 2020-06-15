@@ -8,4 +8,6 @@ enum npsql_type
     TYPE_CHAR
 };
 
+
+
 #endif

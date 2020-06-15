@@ -8,7 +8,7 @@
         "type": "cppdbg",
         "request": "launch",
         "program": "${command:cmake.launchTargetPath}",
-        "args": ["sample.data", "sample.log"],
+        "args": ["sample.dat", "sample.log"],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
         "environment": [],

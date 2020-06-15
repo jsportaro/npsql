@@ -1,5 +1,6 @@
 #include <buffers.h>
 #include <defaults.h>
+#include <expr_eval.h>
 #include <nqp.h>
 #include <plans.h>
 #include <scans.h>
@@ -188,10 +189,8 @@ static void say_completed(struct session *session, enum completed_status status,
     free(completed);
 }
 
-static void say_columns(struct session *session, struct query_results *results)
+static void say_columns(struct session *session, struct query_results *r)
 {  
-    UNUSED(results);
-
     vector_type(uint8_t) column_bytes = NULL;
 
     // Header 
@@ -200,15 +199,11 @@ static void say_columns(struct session *session, struct query_results *results)
     vector_push(column_bytes, 0x00);
 
     // Payload
-    vector_type(struct column) columns = NULL;
-    
-    if (results->current_plan->type == PROJECT_PLAN)
+    if (r->current_plan->type == PROJECT_PLAN)
     {
-        //columns = ((struct plan *)results->current_plan)->column_list;
-    
-        for (size_t i = 0; i < vector_size(columns); i++)
+        for (size_t i = 0; i < vector_size(r->columns); i++)
         {
-            struct column col = columns[i];
+            struct plan_column col = r->columns[i];
             long start_size = vector_size(column_bytes);
             uint16_t length = COLUMN_MIN_LENGTH + strlen(col.name);
             
@@ -216,10 +211,10 @@ static void say_columns(struct session *session, struct query_results *results)
 
             uint8_t *column_start = &column_bytes[start_size];
 
-            column_start[0] = (uint8_t)col.type;                         //  Column Type
-            htops((uint16_t)col.size, &column_start[1]);                 //  Column Type Size (# bytes)
-            htops((uint16_t)vector_size(col.name), &column_start[3]);          //  Name Size (# bytes)
-            memcpy(&column_start[5], col.name, strlen(col.name));  //  Name 
+            column_start[0] = (uint8_t)col.type;                      //  Column Type
+            htops((uint16_t)col.size, &column_start[1]);              //  Column Type Size (# bytes)
+            htops((uint16_t)strlen(col.name), &column_start[3]); //  Name Size (# bytes)
+            memcpy(&column_start[5], col.name, strlen(col.name));     //  Name 
 
             vector_set_size(column_bytes, length + start_size);
         }
@@ -257,7 +252,7 @@ static void handle_query(struct session *session, size_t payload_size)
     char *query = malloc(payload_size);
     struct query_results *results = NULL;
     vector_type(uint8_t) rowset_bytes = NULL;
-
+    struct value v = { 0 };
     receive_buffer(session->socket, (uint8_t *)query, payload_size);
     results = submit_query(session->manager->engine, query, payload_size);
 
@@ -286,19 +281,26 @@ static void handle_query(struct session *session, size_t payload_size)
 
             vector_type(uint8_t) bytes = NULL;
             vector_grow(bytes, MAX_MESSAGE_SIZE);
-            // vector_type(struct scan_field) fields = results->current_scan->scan_fields;
-            // for (size_t i = 0; i < vector_size(fields); i++)
-            // {
-            //     struct scan_field field = fields[i];
-            //     switch (field.type)
-            //     {
-            //         case TYPE_INT:
-            //             push_uint32(bytes, field.value.number);
-            //             break;
-            //         default:
-            //             break;
-            //     }
-            //}
+            vector_type(struct expr_ctx *) e = get_sql_select(results);
+
+            for (size_t i = 0; i < vector_size(e); i++)
+            {
+                
+                v = eval(e[i]->expr, results->current_scan);
+
+                switch (v.type)
+                {
+                    case TYPE_INT:
+                        push_uint32(bytes, v.as.number);
+                        break;
+                    case TYPE_CHAR:
+                        push_cpy(bytes, v.as.string, v.size);\
+                        break;
+                    case TYPE_UNKNOWN:
+                        break;
+                }
+
+            }
             size_t b_size =  vector_size(bytes);
             uint8_t *row_start = &rowset_bytes[vector_size(rowset_bytes)];
             memcpy(row_start, bytes, b_size);

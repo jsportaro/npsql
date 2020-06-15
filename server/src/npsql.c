@@ -49,6 +49,7 @@ struct query_results * submit_query(struct query_engine *query_engine, char *que
     results->sets_to_return = vector_size(results->parsed_sql->stmts);
     results->rows_to_return = 0;
     results->current = NULL;
+    results->columns = NULL;
     results->current_plan = NULL;
     results->current_scan = NULL;
     results->engine = query_engine;     
@@ -62,12 +63,7 @@ struct query_results * submit_query(struct query_engine *query_engine, char *que
 
 bool has_rows(struct query_results *r)
 {
-    if (r->current_scan == NULL)
-    {
-        return false;
-    }
-
-    return r->current_scan->has_rows;
+    return vector_size(r->columns) > 0 ? true : false;
 }
 
 bool get_next_set(struct query_results *r)
@@ -86,15 +82,19 @@ bool get_next_set(struct query_results *r)
 
     if (s->type == STMT_SELECT)
     {
-        r->current_plan =  create_plan(s, &r->ctx);
-        r->current_scan = r->current_plan->open(r->current_plan);
+        struct planner_result *pr = create_plan(s, &r->ctx);
+        r->columns                = pr->columns;
+        r->current_plan           =  pr->plan;
+        r->current_scan           = r->current_plan->open(r->current_plan);
+
+        free(pr);
     }
     else if (s->type == STMT_CREATE_TABLE)
     {
         r->current = NULL;
         r->current_plan = NULL;
         r->current_scan = NULL;
-
+        r->columns = NULL;
         execute_create_table(r->tsx, &r->engine->cat, (struct create_table *)s);
     }
     else if (s->type == STMT_INSERT_INTO)
@@ -102,6 +102,7 @@ bool get_next_set(struct query_results *r)
         r->current = NULL;
         r->current_plan = NULL;
         r->current_scan = NULL;
+        r->columns = NULL;
 
         execute_insert_into(r->tsx, &r->engine->cat, (struct insert *)s);
     }

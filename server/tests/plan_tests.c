@@ -1,3 +1,4 @@
+#include <expr_eval.h>
 #include <file.h>
 #include <npsql.h>
 #include <plans.h>
@@ -78,13 +79,22 @@ int main(void)
     struct value v;
     while (get_next_set(results))
     {
+        for (size_t i = 0; i < vector_size(results->columns); i++)
+        {
+            fprintf(stdout, "Column ( %s, %zu, %d ) \n", results->columns[i].name, results->columns[i].size, results->columns[i].type);
+        }
+
         while (next_set_record(results))
         {
+
+
             vector_type(struct expr_ctx *) e = get_sql_select(results);
 
             for (int i = 0; i < vector_size(e); i++)
             {
-                results->current_scan->get_value(results->current_scan, e[i]->col_name, &v);
+                
+                v = eval(e[i]->expr, results->current_scan);
+
             }
         }
     }

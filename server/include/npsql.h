@@ -25,16 +25,17 @@ struct query_engine
 
 struct query_results
 {
-    uint32_t             sets_to_return;
-    int                  rows_to_return;
-    vector_type(uint8_t) current;
-    struct parsed_sql    *parsed_sql;
-    uint32_t              next_stmt;
-    struct plan          *current_plan;
-    struct scan          *current_scan;
-    struct query_engine  *engine;
-    struct transaction   *tsx;
-    struct query_ctx      ctx;
+    uint32_t                         sets_to_return;
+    int                              rows_to_return;
+    vector_type(uint8_t)             current;
+    struct parsed_sql               *parsed_sql;
+    uint32_t                         next_stmt;
+    vector_type(struct plan_column)  columns;
+    struct plan                     *current_plan;
+    struct scan                     *current_scan;
+    struct query_engine             *engine;
+    struct transaction              *tsx;
+    struct query_ctx                 ctx;
 };
 
 
