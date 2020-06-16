@@ -406,7 +406,7 @@ free_expr(struct expr *expr)
         case EXPR_SUB:
         case EXPR_MUL:
         case EXPR_DIV:
-        case EXPR_COMPARISON:
+        case EXPR_EQU:
             infix = (struct infix_expr *)expr;
             free_expr(infix->l);
             free_expr(infix->r);

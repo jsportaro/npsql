@@ -294,8 +294,18 @@ static void handle_query(struct session *session, size_t payload_size)
                         push_uint32(bytes, v.as.number);
                         break;
                     case TYPE_CHAR:
-                        push_cpy(bytes, v.as.string, v.size);\
+                        push_cpy(bytes, v.as.string, v.size);
                         break;
+                    case TYPE_BOOL:
+                        if (v.as.boolean == true)
+                        {
+                            push_cpy(bytes, "true", 4);
+                        }
+                        else
+                        {
+                            push_cpy(bytes, "false", 5);
+                        }
+                        
                     case TYPE_UNKNOWN:
                         break;
                 }

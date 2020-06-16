@@ -35,7 +35,7 @@ WHERE       { return WHERE;  }
 
 {operators} { return yytext[0]; }
  
-"="	        { yylval->OPERATOR = yytext; return COMPARISON; }
+"="	        { yylval->OPERATOR = yytext; return EQUALITY; }
 
 {blank}     ;
 

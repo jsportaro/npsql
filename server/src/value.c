@@ -36,6 +36,8 @@ void deserialize(struct value *dest, enum npsql_type type, uint8_t *src, uint32_
         case TYPE_CHAR:
             dest->as.string = (char *)src;
             break;
+        case TYPE_BOOL:
+            dest->as.boolean = true;
         case TYPE_UNKNOWN:
             break;
     }

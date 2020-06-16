@@ -8,7 +8,7 @@
 
 #define UNUSED(expr) do { (void)(expr); } while (0)
 
-#define TYPE_INT_SIZE 4
+
 
 void uuid_string(uint8_t *uuid, char *string);
 void htops(const int16_t value, uint8_t *buffer);

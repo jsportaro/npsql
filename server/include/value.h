@@ -15,6 +15,7 @@ struct value
     union {
         int number;
         char *string;
+        bool boolean;
     } as;
 };
 

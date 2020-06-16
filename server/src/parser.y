@@ -40,6 +40,7 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 %token CHAR
 %token COMPARISON 
 %token CREATE
+%token EQUALITY
 %token FROM
 %token INT
 %token INSERT
@@ -180,7 +181,7 @@ expr:
   | expr '-' expr                    { $$ = new_infix_expr(EXPR_SUB, $1, $3); }
   | expr '*' expr                    { $$ = new_infix_expr(EXPR_MUL, $1, $3); }
   | expr '/' expr                    { $$ = new_infix_expr(EXPR_DIV, $1, $3); }
-  | expr COMPARISON expr             { $$ = new_infix_expr(EXPR_COMPARISON, $1, $3); }
+  | expr EQUALITY expr               { $$ = new_infix_expr(EXPR_EQU, $1, $3); }
 ;
 
 %%

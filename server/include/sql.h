@@ -32,7 +32,7 @@ enum expr_type
     EXPR_SUB,
     EXPR_MUL,
     EXPR_DIV,
-    EXPR_COMPARISON
+    EXPR_EQU,
 };
 
 struct expr_ctx
