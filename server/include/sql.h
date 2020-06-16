@@ -33,6 +33,8 @@ enum expr_type
     EXPR_MUL,
     EXPR_DIV,
     EXPR_EQU,
+    EXPR_AND,
+    EXPR_OR,
 };
 
 struct expr_ctx

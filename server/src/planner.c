@@ -70,7 +70,6 @@ resolve_type(struct expr *e, vector_type(struct plan_column) c)
 
                 if (tl.type == tr.type)
                 {
-                    
                     pr.type = tl.type;
                 }
                 else
@@ -86,7 +85,22 @@ resolve_type(struct expr *e, vector_type(struct plan_column) c)
 
                 if (tl.type == tr.type)
                 {
-                    
+                    pr.type = TYPE_BOOL;
+                }
+                else
+                {
+                    pr.type = TYPE_UNKNOWN;
+                }
+            }
+            break;
+        case EXPR_AND:
+        case EXPR_OR:  {
+                infix = (struct infix_expr *)e;
+                struct plan_column tl = resolve_type(infix->l, c);
+                struct plan_column tr = resolve_type(infix->r, c);
+
+                if (tl.type == TYPE_BOOL && tr.type == TYPE_BOOL)
+                {
                     pr.type = TYPE_BOOL;
                 }
                 else

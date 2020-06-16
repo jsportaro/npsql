@@ -71,7 +71,7 @@ void select_plan_with_data(void)
 
     setup_db("plans_test", &engine);
 
-    char *select = "select age, name from people where age = 36;";
+    char *select = "select age, name from people where age = 36 and 1 = 1;";
     struct query_results *results = submit_query(&engine, select, strlen(select));
 
     if (results->parsed_sql->error == true)

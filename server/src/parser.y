@@ -32,7 +32,9 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 %token <const char *>   IDENTIFIER "identifier"
 %token <const char *>   OPERATOR   "operator"
 
-%left COMPARISON
+%left AND
+%left OR
+%left EQUALITY
 %left '+' '-'
 %left '*' '/'
 
@@ -177,6 +179,8 @@ expr:
   | expr '*' expr                    { $$ = new_infix_expr(EXPR_MUL, $1, $3); }
   | expr '/' expr                    { $$ = new_infix_expr(EXPR_DIV, $1, $3); }
   | expr EQUALITY expr               { $$ = new_infix_expr(EXPR_EQU, $1, $3); }
+  | expr AND expr                    { $$ = new_infix_expr(EXPR_AND, $1, $3); }
+  | expr OR expr                     { $$ = new_infix_expr(EXPR_OR , $1, $3); }
 ;
 
 %%

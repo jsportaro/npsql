@@ -5,41 +5,52 @@
 bool
 do_op(enum expr_type t, struct value *l, struct value *r,struct value *v)
 {
-    if (l->type == TYPE_INT && r->type == TYPE_INT)
+    
+    v->type = TYPE_INT;
+    v->size = TYPE_INT_SIZE;
+    
+    switch (t)
     {
-        v->type = TYPE_INT;
-        v->size = TYPE_INT_SIZE;
-        
-        switch (t)
-        {
-            case EXPR_ADD:
-                v->as.number = l->as.number + r->as.number;
-                return true;
-            case EXPR_SUB:
-                v->as.number = l->as.number - r->as.number;
-                return true;
-            case EXPR_MUL:
-                v->as.number = l->as.number * r->as.number;
-                return true;
-            case EXPR_DIV:
-                v->as.number = l->as.number / r->as.number;
-                return true;
-            case EXPR_EQU:
-                if (l->type == TYPE_INT)
-                {
-                    v->type = TYPE_BOOL;
-                    v->as.boolean = l->as.number == r->as.number;
+        case EXPR_ADD:
+            v->as.number = l->as.number + r->as.number;
+            return true;
+        case EXPR_SUB:
+            v->as.number = l->as.number - r->as.number;
+            return true;
+        case EXPR_MUL:
+            v->as.number = l->as.number * r->as.number;
+            return true;
+        case EXPR_DIV:
+            v->as.number = l->as.number / r->as.number;
+            return true;
+        case EXPR_EQU:
+            if (l->type == TYPE_INT)
+            {
+                v->type = TYPE_BOOL;
+                v->as.boolean = l->as.number == r->as.number;
 
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-                                
-            default:
-                return false;
-        }
+                return true;
+            }
+        case EXPR_OR:
+            if (l->type == TYPE_BOOL && r->type == TYPE_BOOL)
+            {
+                v->type = TYPE_BOOL;
+                v->as.boolean = l->as.boolean || r->as.boolean;
+
+                return true;
+            }
+
+        case EXPR_AND:
+            if (l->type == TYPE_BOOL && r->type == TYPE_BOOL)
+            {
+                v->type = TYPE_BOOL;
+                v->as.boolean = l->as.boolean && r->as.boolean;
+
+                return true;
+            }
+
+        default:
+            return false;
     }
 
     return false;
@@ -72,6 +83,8 @@ eval(struct expr *expr, struct scan *scan)
         case EXPR_MUL:
         case EXPR_DIV:
         case EXPR_EQU:
+        case EXPR_AND:
+        case EXPR_OR:
             infix = (struct infix_expr *)expr;
             l = eval(infix->l, scan);
             r = eval(infix->r, scan);

@@ -389,6 +389,8 @@ free_expr(struct expr *expr)
         case EXPR_MUL:
         case EXPR_DIV:
         case EXPR_EQU:
+        case EXPR_AND:
+        case EXPR_OR:
             infix = (struct infix_expr *)expr;
             free_expr(infix->l);
             free_expr(infix->r);
