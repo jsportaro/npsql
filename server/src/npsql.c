@@ -79,14 +79,30 @@ bool get_next_set(struct query_results *r)
 
     free_plan(r->current_plan);
     free_scan(r->current_scan);
+    vector_free(r->columns);
 
     if (s->type == STMT_SELECT)
     {
         struct planner_result *pr = create_plan(s, &r->ctx);
-        r->columns                = pr->columns;
-        r->current_plan           =  pr->plan;
-        r->current_scan           = r->current_plan->open(r->current_plan);
 
+        if (pr->status == PLANNER_SUCCESS)
+        {
+            r->columns                = pr->columns;
+            r->current_plan           = pr->plan;
+            r->current_scan           = r->current_plan->open(r->current_plan);
+        }
+        else
+        {
+            r->current = NULL;
+            r->current_plan = NULL;
+            r->current_scan = NULL;
+            r->columns = NULL;
+
+            rollback(r->tsx);
+
+            return false;
+        }
+        
         free(pr);
     }
     else if (s->type == STMT_CREATE_TABLE)
@@ -132,6 +148,7 @@ void free_results(struct query_results *r)
     free_stmts(r->parsed_sql);
     free_plan(r->current_plan);
     free_scan(r->current_scan);
+    vector_free(r->columns);
     free(r);
 }
 

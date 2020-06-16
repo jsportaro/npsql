@@ -19,56 +19,69 @@ create_plan(struct sql_stmt *sql, struct query_ctx *ctx)
     return plan;
 }
 
-enum npsql_type 
+struct plan_column *
 lookup(vector_type(struct plan_column) c, char *n)
 {
     for (size_t i = 0; i < vector_size(c); i++)
     {
         if (strcmp(c[i].name, n) == 0)
         {
-            return c[i].type;
+            return &c[i];
         }
     }
     
-    return TYPE_UNKNOWN;
+    return NULL;
 }
 
-enum npsql_type 
+struct plan_column
 resolve_type(struct expr *e, vector_type(struct plan_column) c)
 {
     struct term_expr *term;
     struct infix_expr *infix = NULL;
+    struct plan_column pr = { 0 };
 
     switch (e->type)
     {
         case EXPR_IDENIFIER:
             term = (struct term_expr *)e;
-            return lookup(c, term->value.string);
+            struct plan_column *found = lookup(c, term->value.string);
+
+            if (found != NULL)
+            {   
+                pr.name = found->name;
+                pr.size = found->size;
+                pr.type = found->type;
+            }
+
+            break;
         case EXPR_INTEGER:
-            return TYPE_INT;
+            pr.type = TYPE_INT;
+            break;
         case EXPR_STRING:
-            return TYPE_CHAR;
+            pr.type = TYPE_CHAR;
+            break;
         case EXPR_ADD:
         case EXPR_SUB:
         case EXPR_MUL:
         case EXPR_DIV:
             infix = (struct infix_expr *)e;
-            enum npsql_type tl = resolve_type(infix->l, c);
-            enum npsql_type tr = resolve_type(infix->r, c);
+            struct plan_column tl = resolve_type(infix->l, c);
+            struct plan_column tr = resolve_type(infix->r, c);
 
-            if (tl == tr)
+            if (tl.type == tr.type && tl.type == TYPE_INT)
             {
-                return tl;
+                pr.type = tl.type;
             }
             else
             {
-                return TYPE_UNKNOWN;
+                pr.type = TYPE_UNKNOWN;
             }
-
             break;
         default:
-            return TYPE_UNKNOWN;
+            break;
     }
+
+    return pr;
 }
 
 struct planner_result *
@@ -76,37 +89,58 @@ create_select_plan(struct select *select, struct query_ctx *ctx)
 {
     struct planner_result *result = malloc(sizeof(struct planner_result));
     struct plan *plan = new_select_stmt_plan(select, ctx);
+    struct plan_column column = { 0 };
 
-    result->plan = plan;
+    result->plan    = plan;
     result->columns = NULL;
+    result->status  = PLANNER_SUCCESS;
+
+    vector_type(struct plan_column) resolved = NULL;
+
 
     for(size_t i = 0; i < vector_size(select->expr_ctx_list); i++)
     {
         for (size_t j = 0; j < vector_size(select->expr_ctx_list[i]->unresolved); j++)
         {
-            struct plan_column c;
+            struct plan_column c = { 0 };
             bool found = plan->get_column(plan, select->expr_ctx_list[i]->unresolved[j], &c);
 
             if (found == true)
             {
-                vector_push(result->columns, c);
+                vector_push(resolved, c);
             }
             else
             {
-                vector_free(result->columns);
-                return NULL;
+                vector_free(resolved);
+                result->status = PLANNER_ERROR;
+                goto end;
             }
         }
 
-        enum npsql_type t = resolve_type(select->expr_ctx_list[i]->expr, result->columns);
+        struct plan_column pc = resolve_type(select->expr_ctx_list[i]->expr, resolved);
         
-        if (t == TYPE_UNKNOWN)
+        if (pc.type == TYPE_UNKNOWN)
         {
-            return NULL;
+            result->status = PLANNER_ERROR;
+            goto end;
         }
-        select->expr_ctx_list[i]->type = t;
-
+        
+        if (select->expr_ctx_list[i]->expr->type == EXPR_IDENIFIER)
+        {
+            column.name = ((struct term_expr *)select->expr_ctx_list[i]->expr)->value.string;
+        }
+        else
+        {
+            column.name = select->expr_ctx_list[i]->col_name;
+        }
+        column.type = pc.type;
+        column.size = pc.size;
+        
+        vector_push(result->columns, column);
+        vector_free(resolved);
+        resolved = NULL;
     }
 
+end:
     return result;
 }

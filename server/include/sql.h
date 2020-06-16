@@ -10,6 +10,7 @@
 
 #define TABLE_NAME_SIZE (MAX_TABLE_NAME + 1)
 #define COLUMN_NAME_SIZE (MAX_COLUMN_NAME + 1)
+
 enum stmt_type
 {
     STMT_SELECT,

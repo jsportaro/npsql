@@ -122,9 +122,8 @@ fetch_table_info(const char *name, struct table_info *ti, PNUM *first_am, struct
             get_int(&table_catalog, current_rid, am_pid, &fam);
             *first_am = (uint64_t)fam;
             exists = true;
+            break;
         }
-
-        break;
     }
 
     if (exists == true)

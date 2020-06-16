@@ -15,8 +15,14 @@ open_project_scan(struct plan *plan)
 {
     struct project_plan *pp = (struct project_plan *)plan;
     
-    return new_project_scan(pp->p->open(pp->p));
-
+    if (pp->p == NULL)
+    {
+        return new_project_scan(NULL);
+    }
+    else
+    {
+        return new_project_scan(pp->p->open(pp->p));
+    }
 }
 
 bool project_plan_get_column(struct plan *plan, char *name, struct plan_column *column)
@@ -148,7 +154,7 @@ struct plan *
 new_select_stmt_plan(struct select *select, struct query_ctx *ctx)
 {
     vector_type(struct plan *) table_plans = NULL;
-
+    struct plan *p = NULL;
     for (size_t i = 0; i < vector_size(select->table_refs); i++)
     {
         struct plan *tp = new_table_plan(select->table_refs[i], ctx);
@@ -156,17 +162,18 @@ new_select_stmt_plan(struct select *select, struct query_ctx *ctx)
         vector_push(table_plans, tp);
     }
 
-    assert(vector_size(table_plans) > 0);
-
-    struct plan *p = table_plans[0];
-    for (size_t i = 1; i < vector_size(table_plans); i++)
+    if (vector_size(table_plans) > 0)
     {
-        p = new_product_plan(p, table_plans[i]);
-    }
+        p = table_plans[0];
+        for (size_t i = 1; i < vector_size(table_plans); i++)
+        {
+            p = new_product_plan(p, table_plans[i]);
+        }
 
-    if (select->where != NULL)
-    {
-        p = new_select_plan(p, select->where);
+        if (select->where != NULL)
+        {
+            p = new_select_plan(p, select->where);
+        }
     }
 
     p = new_project_plan(p);

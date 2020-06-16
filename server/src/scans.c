@@ -148,6 +148,18 @@ project_scan_next(struct scan *scan)
 {
     struct project_scan *ps = (struct project_scan *)scan;
 
+    if (ps->scan == NULL)
+    {
+        bool has_next = ps->has_next;
+
+        if (ps->has_next == true)
+        {
+            ps->has_next = false;
+        }
+
+        return has_next;
+    }
+    
     return ps->scan->next(ps->scan);
 }
 
@@ -171,6 +183,7 @@ new_project_scan(struct scan *inner)
     ps->scan = inner;
     ps->next = &project_scan_next;
     ps->get_value = &project_scan_get_value;
+    ps->has_next = true;
 
     return (struct scan *)ps;
 }

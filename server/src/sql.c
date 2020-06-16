@@ -106,10 +106,6 @@ new_expr_ctx_list(struct expr *expr, vector_type(char *) unresolved)
     expr_ctx->col_name = generate_name(vector_size(expr_ctx_list));
     vector_push(expr_ctx_list, expr_ctx);
 
-    size_t t = vector_size(expr_ctx->unresolved);
-
-    UNUSED(t);
-
     return expr_ctx_list;
 }
 
@@ -123,10 +119,6 @@ append_expr_ctx_list(vector_type(struct expr_ctx *) expr_ctx_list, struct expr *
     expr_ctx->unresolved = unresolved;
     expr_ctx->col_name = generate_name(vector_size(expr_ctx_list));
     vector_push(expr_ctx_list, expr_ctx);
-
-    size_t t = vector_size(expr_ctx->unresolved);
-
-    UNUSED(t);
 
     return expr_ctx_list;
 }
@@ -323,6 +315,14 @@ free_select(struct select * select)
     for (size_t i = 0; i < vector_size(select->expr_ctx_list); i++)
     {
         free_expr(select->expr_ctx_list[i]->expr);
+        free(select->expr_ctx_list[i]->col_name);
+        
+        // for (size_t j = 0; j < vector_size((select->expr_ctx_list[i]->unresolved); j++)
+        // {
+        //     free(select->expr_ctx_list[i]->unresolved[j]);
+        // }
+
+        free(select->expr_ctx_list[i]);
     }
 
     for (size_t i = 0; i < vector_size(select->table_refs); i++)

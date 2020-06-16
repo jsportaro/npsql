@@ -211,10 +211,10 @@ static void say_columns(struct session *session, struct query_results *r)
 
             uint8_t *column_start = &column_bytes[start_size];
 
-            column_start[0] = (uint8_t)col.type;                      //  Column Type
-            htops((uint16_t)col.size, &column_start[1]);              //  Column Type Size (# bytes)
-            htops((uint16_t)strlen(col.name), &column_start[3]); //  Name Size (# bytes)
-            memcpy(&column_start[5], col.name, strlen(col.name));     //  Name 
+            column_start[0] = (uint8_t)col.type;                  //  Column Type
+            htops((uint16_t)col.size, &column_start[1]);          //  Column Type Size (# bytes)
+            htops((uint16_t)strlen(col.name), &column_start[3]);  //  Name Size (# bytes)
+            memcpy(&column_start[5], col.name, strlen(col.name)); //  Name 
 
             vector_set_size(column_bytes, length + start_size);
         }
@@ -285,7 +285,6 @@ static void handle_query(struct session *session, size_t payload_size)
 
             for (size_t i = 0; i < vector_size(e); i++)
             {
-                
                 v = eval(e[i]->expr, results->current_scan);
 
                 switch (v.type)
@@ -299,8 +298,8 @@ static void handle_query(struct session *session, size_t payload_size)
                     case TYPE_UNKNOWN:
                         break;
                 }
-
             }
+            
             size_t b_size =  vector_size(bytes);
             uint8_t *row_start = &rowset_bytes[vector_size(rowset_bytes)];
             memcpy(row_start, bytes, b_size);

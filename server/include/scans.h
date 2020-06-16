@@ -54,6 +54,8 @@ struct project_scan
     bool (*next)(struct scan *scan);
     void (*get_value)(struct scan *scan, char *column_name, struct value *value);
     struct scan *scan;
+
+    bool has_next;
 };
 
 struct select_scan
