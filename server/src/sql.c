@@ -19,12 +19,11 @@ struct sql_stmt *new_select
 
     assert(select != NULL);
 
-
     select->expr_ctx_list = NULL;
-    select->table_refs = NULL;
-    select->where = NULL;
-    select->type = STMT_SELECT;
-
+    select->table_refs    = NULL;
+    select->where         = NULL;
+    select->type          = STMT_SELECT;
+    select->unresolved    = NULL;
     select->expr_ctx_list = expr_ctx_list;
 
     return (struct sql_stmt *)select;
@@ -34,20 +33,18 @@ struct sql_stmt *
 new_select_data(
     vector_type(struct expr_ctx *) expr_ctx_list, 
     vector_type(struct table_ref *) table_refs, 
-    struct where *where)
+    struct expr *where,
+    vector_type(char *) unresolved)
 {
     struct select *select = malloc(sizeof(struct select));
 
     assert(select != NULL);
 
-    select->expr_ctx_list = NULL;
-    select->table_refs = NULL;
-    select->where = NULL;
-    select->type = STMT_SELECT;
-
+    select->type          = STMT_SELECT;
     select->expr_ctx_list = expr_ctx_list;
-    select->table_refs = table_refs;
-    select->where = where;
+    select->table_refs    = table_refs;
+    select->where         = where;
+    select->unresolved    = unresolved;
 
     return (struct sql_stmt *)select;
 }
@@ -83,7 +80,7 @@ char *generate_name(int i)
 }
 
 vector_type(struct expr_ctx *) 
-new_expr_ctx_list(struct expr *expr, vector_type(char *) unresolved)
+new_expr_ctx_list(struct expr *expr)
 {
 
     vector_type(struct expr_ctx *) expr_ctx_list = NULL;
@@ -92,7 +89,6 @@ new_expr_ctx_list(struct expr *expr, vector_type(char *) unresolved)
     assert(expr_ctx != NULL);
 
     expr_ctx->expr = expr;
-    expr_ctx->unresolved = unresolved;
     expr_ctx->col_name = generate_name(vector_size(expr_ctx_list));
     vector_push(expr_ctx_list, expr_ctx);
 
@@ -100,13 +96,12 @@ new_expr_ctx_list(struct expr *expr, vector_type(char *) unresolved)
 }
 
 vector_type(struct expr_ctx *) 
-append_expr_ctx_list(vector_type(struct expr_ctx *) expr_ctx_list, struct expr *expr, vector_type(char *) unresolved)
+append_expr_ctx_list(vector_type(struct expr_ctx *) expr_ctx_list, struct expr *expr)
 {
     struct expr_ctx *expr_ctx = malloc(sizeof(struct expr_ctx));
     assert(expr_ctx != NULL);
     
     expr_ctx->expr = expr;
-    expr_ctx->unresolved = unresolved;
     expr_ctx->col_name = generate_name(vector_size(expr_ctx_list));
     vector_push(expr_ctx_list, expr_ctx);
 
@@ -123,17 +118,6 @@ new_table_ref(const char *name)
     table_ref->table_name = name;
 
     return table_ref;
-}
-
-struct where * 
-new_where(struct expr *clause, vector_type(char *) unresolved)
-{
-    struct where *where = malloc(sizeof(struct where));
-
-    where->clause = clause;
-    where->unresolved = unresolved;
-
-    return where;
 }
 
 vector_type(struct table_ref *) 
@@ -315,7 +299,6 @@ free_select(struct select * select)
 {
     for (size_t i = 0; i < vector_size(select->expr_ctx_list); i++)
     {
-        vector_free(select->expr_ctx_list[i]->unresolved);
         free_expr(select->expr_ctx_list[i]->expr);
         free(select->expr_ctx_list[i]->col_name);
         free(select->expr_ctx_list[i]);
@@ -329,13 +312,12 @@ free_select(struct select * select)
 
     if (select->where != NULL)
     {
-        free_expr(select->where->clause);
-        vector_free(select->where->unresolved);
-        free(select->where);
+        free_expr(select->where);
     }
 
     vector_free(select->expr_ctx_list);
     vector_free(select->table_refs);
+    vector_free(select->unresolved);
 
     select->expr_ctx_list = NULL;
     select->table_refs = NULL;

@@ -59,7 +59,7 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 %type <struct table_ref *> table_reference
 %type <struct expr *> select_expr
 %type <struct expr *> expr
-%type <struct where *> opt_where
+%type <struct expr *> opt_where
 %type <struct column_def *> create_def
 %type <struct type_def *> data_type
 %type <vector_type(char *)> column_list
@@ -82,21 +82,22 @@ select_stmt:
     SELECT select_expr_list          { $$ = new_select($2); }
   | SELECT select_expr_list
     FROM table_references            
-    opt_where                        { $$ = new_select_data($2, $4, $5); }
+    opt_where                        { 
+                                       $$ = new_select_data($2, $4, $5, parsed->unresolved); 
+                                       parsed->unresolved = NULL;
+                                     }
 ;  
 
 select_expr_list: 
     select_expr                      { 
-                                       $$ = new_expr_ctx_list($1, parsed->unresolved); 
-                                       parsed->unresolved = NULL; 
+                                       $$ = new_expr_ctx_list($1); 
                                      }
 
   | select_expr_list ',' select_expr { 
-                                       $$ = append_expr_ctx_list($1, $3, parsed->unresolved); 
-                                       parsed->unresolved = NULL; 
+                                       $$ = append_expr_ctx_list($1, $3); 
                                      }
 
-  | '*'                              { $$ = new_expr_ctx_list(NULL, NULL); }
+  | '*'                              { $$ = new_expr_ctx_list(NULL); }
 ;
 
 select_expr:
@@ -114,8 +115,7 @@ table_reference:
 opt_where:
                                      { $$ = NULL; }
   | WHERE expr                       { 
-                                       $$ = new_where($2, parsed->unresolved);  
-                                       parsed->unresolved = NULL; 
+                                       $$ = $2;  
                                      }
 ;
 
@@ -155,13 +155,9 @@ column_list:
 value_list: 
     expr                             { 
                                        $$ = new_expr_list($1);
-                                       vector_free(parsed->unresolved);
-                                       parsed->unresolved = NULL;         
                                      }
   | value_list ',' expr              { 
                                        $$ = append_expr_list($1, $3);
-                                       vector_free(parsed->unresolved);
-                                       parsed->unresolved = NULL;  
                                      }
 ;
 
@@ -171,7 +167,6 @@ expr:
   | "identifier"                     { 
                                         struct term_expr *t = new_term_expr(EXPR_IDENIFIER, $1); 
                                         vector_push(parsed->unresolved, t->value.string);  
-                                        
                                         $$ = (struct expr *)t; 
                                      }
 ;

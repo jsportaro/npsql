@@ -97,26 +97,25 @@ create_select_plan(struct select *select, struct query_ctx *ctx)
 
     vector_type(struct plan_column) resolved = NULL;
 
+    for (size_t i = 0; i < vector_size(select->unresolved); i++)
+    {
+        struct plan_column c = { 0 };
+        bool found = plan->get_column(plan, select->unresolved[i], &c);
+
+        if (found == true)
+        {
+            vector_push(resolved, c);
+        }
+        else
+        {
+            vector_free(resolved);
+            result->status = PLANNER_ERROR;
+            goto end;
+        }
+    }
 
     for(size_t i = 0; i < vector_size(select->expr_ctx_list); i++)
     {
-        for (size_t j = 0; j < vector_size(select->expr_ctx_list[i]->unresolved); j++)
-        {
-            struct plan_column c = { 0 };
-            bool found = plan->get_column(plan, select->expr_ctx_list[i]->unresolved[j], &c);
-
-            if (found == true)
-            {
-                vector_push(resolved, c);
-            }
-            else
-            {
-                vector_free(resolved);
-                result->status = PLANNER_ERROR;
-                goto end;
-            }
-        }
-
         struct plan_column pc = resolve_type(select->expr_ctx_list[i]->expr, resolved);
         
         if (pc.type == TYPE_UNKNOWN)
@@ -137,10 +136,9 @@ create_select_plan(struct select *select, struct query_ctx *ctx)
         column.size = pc.size;
         
         vector_push(result->columns, column);
-        vector_free(resolved);
-        resolved = NULL;
     }
 
 end:
+    vector_free(resolved);
     return result;
 }

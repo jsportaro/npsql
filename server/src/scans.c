@@ -89,7 +89,7 @@ new_project_scan(struct scan *inner)
 }
 
 struct scan * 
-new_select_scan(struct scan *inner, struct where *where_clause)
+new_select_scan(struct scan *inner, struct expr *where_clause)
 {
     struct select_scan *ss = malloc(sizeof(struct select_scan));
     assert(ss != NULL);

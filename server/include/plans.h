@@ -47,8 +47,8 @@ struct select_plan
     struct scan * (*open)(struct plan *project);
     bool (*get_column)(struct plan *plan, char *name, struct plan_column *column);
     
-    struct plan  *p;
-    struct where *where_clause;
+    struct plan *p;
+    struct expr *where_clause;
 };
 
 struct product_plan

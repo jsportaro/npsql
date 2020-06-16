@@ -61,7 +61,7 @@ bool select_scan_get_column(struct plan *plan, char *name, struct plan_column *c
 }
 
 struct plan *
-new_select_plan(struct plan *p, struct where *where_clause)
+new_select_plan(struct plan *p, struct expr *where_clause)
 {
     struct select_plan *sp = malloc(sizeof(struct select_plan));
     assert(sp != NULL);
