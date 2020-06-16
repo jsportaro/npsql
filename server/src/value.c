@@ -12,24 +12,22 @@ void reset(struct value *v)
         v->as.number = 0;
         break;
     case TYPE_CHAR:
-        if (v->as.string != NULL)
-        {
-            free(v->as.string);
-        }
         v->as.string = NULL;
         break;
     default:
         break;
     }
 
+    free(v->base);
     v->type = TYPE_UNKNOWN;
 }
 
 void deserialize(struct value *dest, enum npsql_type type, uint8_t *src, uint32_t size)
 {
-    reset (dest);
+    reset(dest);
     dest->size = size;
     dest->type = type;
+    dest->base = src;
     switch (dest->type)
     {
         case TYPE_INT:

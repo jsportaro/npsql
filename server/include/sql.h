@@ -132,8 +132,8 @@ struct sql_stmt * new_select_data(
 
 struct sql_stmt * new_select(vector_type(struct expr_ctx *) expr_list);
 
-vector_type(struct expr *) new_expr_list(struct expr *expr, vector_type(char *) unresolved);
-vector_type(struct expr *) append_expr_list(vector_type(struct expr *) expr_list, struct expr *expr, vector_type(char *) unresolved);
+vector_type(struct expr *) new_expr_list(struct expr *expr);
+vector_type(struct expr *) append_expr_list(vector_type(struct expr *) expr_list, struct expr *expr);
 
 vector_type(struct expr_ctx *) new_expr_ctx_list(struct expr *expr, vector_type(char *) unresolved);
 vector_type(struct expr_ctx *) append_expr_ctx_list(vector_type(struct expr_ctx *) expr_ctx_list, struct expr *expr, vector_type(char *) unresolved);

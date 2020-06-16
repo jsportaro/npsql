@@ -86,13 +86,13 @@ select_stmt:
 
 select_expr_list: 
     select_expr                      { 
-                                        $$ = new_expr_ctx_list($1, parsed->unresolved); 
-                                        parsed->unresolved = NULL; 
+                                       $$ = new_expr_ctx_list($1, parsed->unresolved); 
+                                       parsed->unresolved = NULL; 
                                      }
 
   | select_expr_list ',' select_expr { 
-                                        $$ = append_expr_ctx_list($1, $3, parsed->unresolved); 
-                                        parsed->unresolved = NULL;  
+                                       $$ = append_expr_ctx_list($1, $3, parsed->unresolved); 
+                                       parsed->unresolved = NULL;  
                                      }
 
   | '*'                              { $$ = new_expr_ctx_list(NULL, NULL); }
@@ -139,7 +139,8 @@ insert_stmt:
     INSERT INTO "identifier" 
     '(' column_list ')'
     VALUES
-    '(' value_list ')'              { $$ = new_insert($3, $5, $9); }
+    '(' value_list ')'               { 
+                                       $$ = new_insert($3, $5, $9); }
 ;
 
 column_list:
@@ -148,8 +149,16 @@ column_list:
 ;
 
 value_list: 
-    expr                             { $$ = new_expr_list($1, parsed->unresolved); vector_free(parsed->unresolved); parsed->unresolved = NULL;          }
-  | value_list ',' expr              { $$ = append_expr_list($1, $3, parsed->unresolved); vector_free(parsed->unresolved); parsed->unresolved = NULL;  }
+    expr                             { 
+                                       $$ = new_expr_list($1);
+                                       vector_free(parsed->unresolved);
+                                       parsed->unresolved = NULL;         
+                                     }
+  | value_list ',' expr              { 
+                                       $$ = append_expr_list($1, $3);
+                                       vector_free(parsed->unresolved);
+                                       parsed->unresolved = NULL;  
+                                     }
 ;
 
 expr:

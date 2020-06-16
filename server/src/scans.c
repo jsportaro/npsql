@@ -120,13 +120,15 @@ struct scan *
 new_table_scan(struct table_info *ti, PNUM first_am, struct query_ctx *ctx)
 {
     struct table_scan *ts = malloc(sizeof(struct table_scan));
+    memset(ts, 0, sizeof(struct table_scan));
+    
     assert(ts != NULL);
 
     ts->type = TABLE_SCAN;
     ts->ti = ti;
     ts->next = &table_scan_next;
     ts->get_value = &table_scan_get_value;
-
+    
     open_heap_table(&ts->ht, ts->ti, ctx->tsx, first_am);
     open_heap_iterator(&ts->ht, &ts->i);
 

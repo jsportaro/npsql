@@ -53,7 +53,7 @@ new_select_data(
 }
 
 vector_type(struct expr *)
-new_expr_list(struct expr *expr, vector_type(char *) unresolved)
+new_expr_list(struct expr *expr)
 {
     vector_type(struct expr *) expr_list = NULL;
 
@@ -62,23 +62,13 @@ new_expr_list(struct expr *expr, vector_type(char *) unresolved)
         vector_push(expr_list, expr);
     }
 
-    for (size_t i = 0; i < vector_size(unresolved); i++)
-    {
-        printf("%s\n", unresolved[i]);
-    }
-
     return expr_list;
 }
 
 vector_type(struct expr *)
-append_expr_list(vector_type(struct expr *) expr_list, struct expr *expr, vector_type(char *) unresolved)
+append_expr_list(vector_type(struct expr *) expr_list, struct expr *expr)
 {
     vector_push(expr_list, expr);
-
-    for (size_t i = 0; i < vector_size(unresolved); i++)
-    {
-        printf("%s\n", unresolved[i]);
-    }
 
     return expr_list;
 }
@@ -314,15 +304,11 @@ free_select(struct select * select)
 {
     for (size_t i = 0; i < vector_size(select->expr_ctx_list); i++)
     {
+        vector_free(select->expr_ctx_list[i]->unresolved);
         free_expr(select->expr_ctx_list[i]->expr);
         free(select->expr_ctx_list[i]->col_name);
-        
-        // for (size_t j = 0; j < vector_size((select->expr_ctx_list[i]->unresolved); j++)
-        // {
-        //     free(select->expr_ctx_list[i]->unresolved[j]);
-        // }
-
         free(select->expr_ctx_list[i]);
+        
     }
 
     for (size_t i = 0; i < vector_size(select->table_refs); i++)

@@ -285,6 +285,7 @@ static void handle_query(struct session *session, size_t payload_size)
 
             for (size_t i = 0; i < vector_size(e); i++)
             {
+                reset(&v);  // Put value in a known state.
                 v = eval(e[i]->expr, results->current_scan);
 
                 switch (v.type)

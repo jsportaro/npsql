@@ -11,6 +11,7 @@ struct value
 {
     enum npsql_type type;
     size_t size;
+    uint8_t *base;
     union {
         int number;
         char *string;
