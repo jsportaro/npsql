@@ -93,6 +93,10 @@ eval(struct expr *expr, struct scan *scan)
             {
                 v.type = TYPE_UNKNOWN;
             }
+
+            // Cleanup
+            reset(&l);
+            reset(&r);
             break;
         default:
             v.type = TYPE_UNKNOWN;
