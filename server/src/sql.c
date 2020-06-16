@@ -34,7 +34,7 @@ struct sql_stmt *
 new_select_data(
     vector_type(struct expr_ctx *) expr_ctx_list, 
     vector_type(struct table_ref *) table_refs, 
-    struct expr *where)
+    struct where *where)
 {
     struct select *select = malloc(sizeof(struct select));
 
@@ -123,6 +123,17 @@ new_table_ref(const char *name)
     table_ref->table_name = name;
 
     return table_ref;
+}
+
+struct where * 
+new_where(struct expr *clause, vector_type(char *) unresolved)
+{
+    struct where *where = malloc(sizeof(struct where));
+
+    where->clause = clause;
+    where->unresolved = unresolved;
+
+    return where;
 }
 
 vector_type(struct table_ref *) 
@@ -318,7 +329,9 @@ free_select(struct select * select)
 
     if (select->where != NULL)
     {
-        free_expr(select->where);
+        free_expr(select->where->clause);
+        vector_free(select->where->unresolved);
+        free(select->where);
     }
 
     vector_free(select->expr_ctx_list);

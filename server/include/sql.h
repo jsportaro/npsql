@@ -72,6 +72,12 @@ struct table_ref
     const char *table_name;
 };
 
+struct where
+{
+    struct expr *clause;
+    vector_type(char *) unresolved;
+};
+
 struct select
 {
     enum stmt_type type;
@@ -79,7 +85,7 @@ struct select
     vector_type(struct expr_ctx *) expr_ctx_list;
     vector_type(struct table_ref *) table_refs;
 
-    struct expr *where;
+    struct where *where;
 };
 
 struct create_table
@@ -128,7 +134,7 @@ void append_stmt(vector_type(struct sql_stmt *) stmt_list, struct sql_stmt * stm
 struct sql_stmt * new_select_data(
     vector_type(struct expr_ctx *) expr_ctx_list, 
     vector_type(struct table_ref *) table_refs, 
-    struct expr *where);
+    struct where *where);
 
 struct sql_stmt * new_select(vector_type(struct expr_ctx *) expr_list);
 
@@ -140,6 +146,7 @@ vector_type(struct expr_ctx *) append_expr_ctx_list(vector_type(struct expr_ctx 
 
 vector_type(struct table_ref *) new_table_list(struct table_ref * table_ref);
 struct table_ref * new_table_ref(const char *name);
+struct where * new_where(struct expr *clause, vector_type(char *) unresolved);
 
 struct term_expr * new_term_expr(enum expr_type type, const void *v);
 struct expr * new_infix_expr(enum expr_type type, struct expr *l, struct expr *r);

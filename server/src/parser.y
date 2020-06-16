@@ -58,7 +58,7 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 %type <struct table_ref *> table_reference
 %type <struct expr *> select_expr
 %type <struct expr *> expr
-%type <struct expr *> opt_where
+%type <struct where *> opt_where
 %type <struct column_def *> create_def
 %type <struct type_def *> data_type
 %type <vector_type(char *)> column_list
@@ -92,7 +92,7 @@ select_expr_list:
 
   | select_expr_list ',' select_expr { 
                                        $$ = append_expr_ctx_list($1, $3, parsed->unresolved); 
-                                       parsed->unresolved = NULL;  
+                                       parsed->unresolved = NULL; 
                                      }
 
   | '*'                              { $$ = new_expr_ctx_list(NULL, NULL); }
@@ -111,8 +111,11 @@ table_reference:
 ;
 
 opt_where:
-                                     { $$= NULL; }
-  | WHERE expr                       { $$ = $2;  }
+                                     { $$ = NULL; }
+  | WHERE expr                       { 
+                                       $$ = new_where($2, parsed->unresolved);  
+                                       parsed->unresolved = NULL; 
+                                     }
 ;
 
 create_table_stmt:
@@ -166,7 +169,8 @@ expr:
   | "integer"                        { $$ =  (struct expr *)new_term_expr(EXPR_INTEGER,   (const void *)(&$1)); }
   | "identifier"                     { 
                                         struct term_expr *t = new_term_expr(EXPR_IDENIFIER, $1); 
-                                        vector_push(parsed->unresolved, t->value.string); 
+                                        vector_push(parsed->unresolved, t->value.string);  
+                                        
                                         $$ = (struct expr *)t; 
                                      }
 ;
