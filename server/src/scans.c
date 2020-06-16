@@ -1,7 +1,7 @@
-
+#include <buffers.h>
 #include <common.h>
 #include <defaults.h>
-#include <buffers.h>
+#include <expr_eval.h>
 #include <heap_table.h>
 #include <query_context.h>
 #include <scans.h>
@@ -178,7 +178,17 @@ select_scan_next(struct scan *scan)
 {
     struct select_scan *ss = (struct select_scan *)scan;
 
-    return ss->scan->next(ss->scan);
+    while (ss->scan->next(ss->scan) == true)
+    {
+        struct value v = eval(ss->where_clause, ss->scan);
+
+        if (v.type == TYPE_BOOL && v.as.boolean == true)
+        {
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 static void 

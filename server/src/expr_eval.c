@@ -24,6 +24,19 @@ do_op(enum expr_type t, struct value *l, struct value *r,struct value *v)
             case EXPR_DIV:
                 v->as.number = l->as.number / r->as.number;
                 return true;
+            case EXPR_EQU:
+                if (l->type == TYPE_INT)
+                {
+                    v->type = TYPE_BOOL;
+                    v->as.boolean = l->as.number == r->as.number;
+
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+                                
             default:
                 return false;
         }
@@ -58,6 +71,7 @@ eval(struct expr *expr, struct scan *scan)
         case EXPR_SUB:
         case EXPR_MUL:
         case EXPR_DIV:
+        case EXPR_EQU:
             infix = (struct infix_expr *)expr;
             l = eval(infix->l, scan);
             r = eval(infix->r, scan);

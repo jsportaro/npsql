@@ -63,18 +63,36 @@ resolve_type(struct expr *e, vector_type(struct plan_column) c)
         case EXPR_ADD:
         case EXPR_SUB:
         case EXPR_MUL:
-        case EXPR_DIV:
-            infix = (struct infix_expr *)e;
-            struct plan_column tl = resolve_type(infix->l, c);
-            struct plan_column tr = resolve_type(infix->r, c);
+        case EXPR_DIV: {
+                infix = (struct infix_expr *)e;
+                struct plan_column tl = resolve_type(infix->l, c);
+                struct plan_column tr = resolve_type(infix->r, c);
 
-            if (tl.type == tr.type && tl.type == TYPE_INT)
-            {
-                pr.type = tl.type;
+                if (tl.type == tr.type)
+                {
+                    
+                    pr.type = tl.type;
+                }
+                else
+                {
+                    pr.type = TYPE_UNKNOWN;
+                }
             }
-            else
-            {
-                pr.type = TYPE_UNKNOWN;
+            break;
+        case EXPR_EQU: {
+                infix = (struct infix_expr *)e;
+                struct plan_column tl = resolve_type(infix->l, c);
+                struct plan_column tr = resolve_type(infix->r, c);
+
+                if (tl.type == tr.type)
+                {
+                    
+                    pr.type = TYPE_BOOL;
+                }
+                else
+                {
+                    pr.type = TYPE_UNKNOWN;
+                }
             }
             break;
         default:
@@ -97,6 +115,7 @@ create_select_plan(struct select *select, struct query_ctx *ctx)
 
     vector_type(struct plan_column) resolved = NULL;
 
+    // Resolve references
     for (size_t i = 0; i < vector_size(select->unresolved); i++)
     {
         struct plan_column c = { 0 };
@@ -114,6 +133,7 @@ create_select_plan(struct select *select, struct query_ctx *ctx)
         }
     }
 
+    // Determine column type and type safety
     for(size_t i = 0; i < vector_size(select->expr_ctx_list); i++)
     {
         struct plan_column pc = resolve_type(select->expr_ctx_list[i]->expr, resolved);
@@ -138,6 +158,16 @@ create_select_plan(struct select *select, struct query_ctx *ctx)
         vector_push(result->columns, column);
     }
 
+    // Ensure where condenses to bool
+    if (select->where != NULL)
+    {
+        struct plan_column where_type = resolve_type(select->where, resolved);
+        if (where_type.type != TYPE_BOOL)
+        {
+            result->status = PLANNER_ERROR;
+            goto end;
+        }
+    }
 end:
     vector_free(resolved);
     return result;
