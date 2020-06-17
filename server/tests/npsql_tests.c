@@ -181,7 +181,7 @@ cleanup:
 int main(void)
 {
     select_plan_with_data();
-    //select_plan_without_data();
+    select_plan_without_data();
     select_plan_star();
     
     return EXIT_SUCCESS;
