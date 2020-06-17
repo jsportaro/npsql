@@ -22,10 +22,18 @@ setup_db(const char *db_name, struct query_engine *engine)
     file_delete(data_file);
     file_delete(log_file);
 
-    char *create = "create table people (id int, age int, name char(30));";
     query_engine_init(data_file, log_file, engine);
 
-    struct query_results *results = results = submit_query(engine, create, strlen(create));
+    char *stmts =
+        "create table people (id int, age int, name char(30));"
+        "create table address (id int, street char(40), town char(20), state char(2), zip char(5));"
+        "insert into people (id, age, name) values (1, 36, 'Heather');"
+        "insert into people (id, age, name) values (2, 37, 'Joe');"
+        "insert into people (id, age, name) values (3, 35, 'Mike');"
+        "insert into address (id, street, town, state, zip) values (1, '28 Windsor Lane', 'Lititz', 'PA' , '17543');"
+        "insert into address (id, street, town, state, zip) values (2, '180 Middlesex Ave', 'Piscataway', 'NJ' , '08854');";
+
+    struct query_results *results = results = submit_query(engine, stmts, strlen(stmts));
 
     if (results->parsed_sql->error == true)
     {
@@ -40,23 +48,6 @@ setup_db(const char *db_name, struct query_engine *engine)
         }
     }
 
-    free_results(results);
-
-    char *insert = "insert into people (id, age, name) values (1, 36, 'Heather');insert into people (id, age, name) values (2, 37, 'Joe');";
-    results = submit_query(engine, insert, strlen(insert));
-
-    if (results->parsed_sql->error == true)
-    {
-        goto cleanup;
-    }
-
-    while (get_next_set(results))
-    {
-        while (next_set_record(results))
-        {
-            
-        }
-    }
 
 cleanup:
     free_results(results);
