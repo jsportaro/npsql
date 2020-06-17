@@ -19,6 +19,7 @@ void reset(struct value *v)
     }
 
     free(v->base);
+    v->base = NULL;
     v->type = TYPE_UNKNOWN;
 }
 

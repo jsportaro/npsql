@@ -370,6 +370,11 @@ void free_column_def(struct column_def *column_def)
 void 
 free_expr(struct expr *expr)
 {
+    if (expr == NULL)
+    {
+        return;
+    }
+
     struct infix_expr *infix = NULL;
     struct term_expr *term = NULL;
 

@@ -72,7 +72,7 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 stmt_list: 
     stmt ';'                         { vector_push(parsed->stmts, $1); }
   | stmt_list stmt ';'               { vector_push(parsed->stmts, $2); } 
-  ;
+;
 
 stmt: 
     select_stmt                      { $$ = $1; }     
@@ -98,12 +98,11 @@ select_expr_list:
   | select_expr_list ',' select_expr { 
                                        $$ = append_expr_ctx_list($1, $3); 
                                      }
-
-  | '*'                              { $$ = new_expr_ctx_list(NULL); }
 ;
 
 select_expr:
     expr                             { $$ = $1; }
+  | '*'                              { $$ = NULL;}
 ;
 
 table_references:
@@ -164,8 +163,8 @@ value_list:
 ;
 
 expr:
-    "string"                         { $$ =  (struct expr *)new_term_expr(EXPR_STRING,    $1); }
-  | "integer"                        { $$ =  (struct expr *)new_term_expr(EXPR_INTEGER,   (const void *)(&$1)); }
+    "string"                         { $$ =  (struct expr *)new_term_expr(EXPR_STRING,  $1); }
+  | "integer"                        { $$ =  (struct expr *)new_term_expr(EXPR_INTEGER, (const void *)(&$1)); }
   | "identifier"                     { 
                                         struct term_expr *t = new_term_expr(EXPR_IDENIFIER, $1); 
                                         vector_push(parsed->unresolved, t->value.string);  

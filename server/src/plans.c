@@ -32,6 +32,13 @@ bool project_plan_get_column(struct plan *plan, char *name, struct plan_column *
     return pp->p->get_column(pp->p, name, column);
 }
 
+vector_type(struct plan_column *) project_plan_get_columns(struct plan *plan)
+{
+    struct project_plan *pp = (struct project_plan *)plan;
+
+    return pp->p->get_columns(pp->p);
+}
+
 struct plan *
 new_project_plan(struct plan *p)
 {
@@ -41,6 +48,7 @@ new_project_plan(struct plan *p)
     pp->p = p;
     pp->open = &open_project_scan;
     pp->get_column = &project_plan_get_column;
+    pp->get_columns = &project_plan_get_columns;
 
     return (struct plan *)pp;
 }
@@ -60,6 +68,13 @@ bool select_scan_get_column(struct plan *plan, char *name, struct plan_column *c
     return sp->p->get_column(sp->p, name, column);
 }
 
+vector_type(struct plan_column *) select_plan_get_columns(struct plan *plan)
+{
+    struct select_plan *sp = (struct select_plan *)plan;
+
+    return sp->p->get_columns(sp->p);
+}
+
 struct plan *
 new_select_plan(struct plan *p, struct expr *where_clause)
 {
@@ -70,6 +85,7 @@ new_select_plan(struct plan *p, struct expr *where_clause)
     sp->where_clause = where_clause;
     sp->open = &open_select_scan;
     sp->get_column = &select_scan_get_column;
+    sp->get_columns = &select_plan_get_columns;
 
     return (struct plan *)sp;
 }
@@ -134,6 +150,26 @@ bool table_scan_get_column(struct plan *plan, char *name, struct plan_column *co
     return false;
 }
 
+vector_type(struct plan_column *) 
+table_plan_get_columns(struct plan *plan)
+{
+    struct table_plan *tp = (struct table_plan *)plan;
+
+    for (size_t i = 0; i < tp->ti.column_count; i++)
+    {
+        struct plan_column *pc = malloc(sizeof(struct plan_column));
+
+        pc->name = tp->ti.columns[i].name;
+        pc->size = tp->ti.columns[i].size;
+        pc->type = tp->ti.columns[i].type;
+        pc->expr = NULL;
+        
+        vector_push(tp->columns, pc);
+    }
+
+    return tp->columns;
+}
+
 struct plan *
 new_table_plan(struct table_ref *table_ref, struct query_ctx *ctx)
 {
@@ -144,7 +180,9 @@ new_table_plan(struct table_ref *table_ref, struct query_ctx *ctx)
     tp->open = &open_table_scan;
     tp->ctx = ctx;
     tp->get_column = &table_scan_get_column;
-    
+    tp->get_columns = &table_plan_get_columns;
+    tp->columns = NULL;
+
     fetch_table_info(table_ref->table_name, &tp->ti, &tp->first_am, ctx->cat, ctx->tsx);
 
     return (struct plan *)tp;
@@ -218,6 +256,11 @@ free_plan(struct plan *p)
             break;
         case TABLE_PLAN:
             table = (struct table_plan *)p;
+            for (size_t i = 0; i < vector_size(table->columns); i++)
+            {
+                free(table->columns[i]);
+            }
+            vector_free(table->columns);
             free(table);
             table = NULL;
             break;

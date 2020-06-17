@@ -116,6 +116,34 @@ resolve_type(struct expr *e, vector_type(struct plan_column) c)
     return pr;
 }
 
+vector_type(struct plan_column) 
+resolve_references(struct plan *plan, vector_type(char *) unresolved, enum planner_status *status)
+{
+    vector_type(struct plan_column) resolved = NULL;
+    *status = PLANNER_SUCCESS;
+
+    for (size_t i = 0; i < vector_size(unresolved); i++)
+    {
+        struct plan_column c = { 0 };
+        bool found = plan->get_column(plan, unresolved[i], &c);
+
+        if (found == true)
+        {
+            vector_push(resolved, c);
+        }
+        else
+        {
+            vector_free(resolved);
+            resolved = NULL;
+            *status = PLANNER_ERROR;
+            
+            break;
+        }
+    }
+
+    return resolved;
+}
+
 struct planner_result *
 create_select_plan(struct select *select, struct query_ctx *ctx)
 {
@@ -127,52 +155,55 @@ create_select_plan(struct select *select, struct query_ctx *ctx)
     result->columns = NULL;
     result->status  = PLANNER_SUCCESS;
 
-    vector_type(struct plan_column) resolved = NULL;
+    vector_type(struct plan_column) resolved = resolve_references(plan, select->unresolved, &result->status);
 
-    // Resolve references
-    for (size_t i = 0; i < vector_size(select->unresolved); i++)
+    if (result->status == PLANNER_ERROR)
     {
-        struct plan_column c = { 0 };
-        bool found = plan->get_column(plan, select->unresolved[i], &c);
-
-        if (found == true)
-        {
-            vector_push(resolved, c);
-        }
-        else
-        {
-            vector_free(resolved);
-            result->status = PLANNER_ERROR;
-            goto end;
-        }
+        goto end;
     }
+    
+    size_t exprs = vector_size(select->expr_ctx_list);
 
     // Determine column type and type safety
-    for(size_t i = 0; i < vector_size(select->expr_ctx_list); i++)
+    for(size_t i = 0; i < exprs; i++)
     {
-        struct plan_column pc = resolve_type(select->expr_ctx_list[i]->expr, resolved);
-        
-        if (pc.type == TYPE_UNKNOWN)
+        if (select->expr_ctx_list[i]->expr != NULL)
         {
-            result->status = PLANNER_ERROR;
-            goto end;
-        }
-        
-        if (select->expr_ctx_list[i]->expr->type == EXPR_IDENIFIER)
-        {
-            column.name = ((struct term_expr *)select->expr_ctx_list[i]->expr)->value.string;
+            struct plan_column pc = resolve_type(select->expr_ctx_list[i]->expr, resolved);
+            
+            if (pc.type == TYPE_UNKNOWN)
+            {
+                result->status = PLANNER_ERROR;
+                goto end;
+            }
+            
+            if (select->expr_ctx_list[i]->expr->type == EXPR_IDENIFIER)
+            {
+                column.name = ((struct term_expr *)select->expr_ctx_list[i]->expr)->value.string;
+            }
+            else
+            {
+                column.name = select->expr_ctx_list[i]->col_name;
+            }
+
+            column.type = pc.type;
+            column.size = pc.size;
+            column.expr = select->expr_ctx_list[i]->expr;
+
+            vector_push(result->columns, column);
         }
         else
         {
-            column.name = select->expr_ctx_list[i]->col_name;
+            vector_type(struct plan_column *) schema = plan->get_columns(plan);
+
+            for (size_t i = 0; i < vector_size(schema); i++)
+            {
+                vector_push(result->columns, *schema[i]);
+            }
         }
-        column.type = pc.type;
-        column.size = pc.size;
-        
-        vector_push(result->columns, column);
     }
 
-    // Ensure where condenses to bool
+    // Ensure where condense to bool
     if (select->where != NULL)
     {
         struct plan_column where_type = resolve_type(select->where, resolved);

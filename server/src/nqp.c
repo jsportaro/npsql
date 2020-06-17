@@ -281,12 +281,23 @@ static void handle_query(struct session *session, size_t payload_size)
 
             vector_type(uint8_t) bytes = NULL;
             vector_grow(bytes, MAX_MESSAGE_SIZE);
-            vector_type(struct expr_ctx *) e = get_sql_select(results);
 
-            for (size_t i = 0; i < vector_size(e); i++)
+            // TODO remove get_Sql_select
+            //vector_type(struct expr_ctx *) e = get_sql_select(results);
+            vector_type(struct plan_column) c = results->columns;
+            
+            for (size_t i = 0; i < vector_size(c); i++)
             {
-                reset(&v);  // Put value in a known state.
-                v = eval(e[i]->expr, results->current_scan);
+                reset(&v);  
+
+                if (c[i].expr == NULL)
+                {
+                    results->current_scan->get_value(results->current_scan, c[i].name, &v);
+                }
+                else
+                {
+                    v = eval(c[i].expr, results->current_scan);
+                }
 
                 switch (v.type)
                 {

@@ -223,3 +223,4 @@ table_scan_get_value(struct scan *scan, char *name, struct value *v)
 
     get_value(&ts->ht, ts->i.current_record, i, v);
 }
+
