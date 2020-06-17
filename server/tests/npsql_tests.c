@@ -78,7 +78,7 @@ void select_plan_with_data(void)
     {
         goto cleanup;
     }
-    struct value v;
+    struct value v = { 0 };
     while (get_next_set(results))
     {
         while (next_set_record(results))
@@ -119,7 +119,7 @@ void select_plan_without_data(void)
         goto cleanup;
     }
 
-    struct value v;
+    struct value v = { 0 };
     while (get_next_set(results))
     {
         while (next_set_record(results))
@@ -151,7 +151,7 @@ void select_plan_star(void)
     {
         goto cleanup;
     }
-    struct value v;
+    struct value v = { 0 };
     while (get_next_set(results))
     {
         while (next_set_record(results))
