@@ -56,9 +56,9 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 %type <struct sql_stmt *> stmt select_stmt create_table_stmt insert_stmt
 %type <vector_type(struct expr_ctx *)> select_expr_list
 %type <vector_type(struct expr *)> value_list
-%type <vector_type(struct table_ref *)> table_references
+%type <vector_type(struct table_ref *)> table_refs
 %type <vector_type(struct column_def *)> create_col_list
-%type <struct table_ref *> table_reference
+%type <struct table_ref *> table_ref
 %type <struct expr *> select_expr
 %type <struct expr *> expr
 %type <struct expr *> opt_where
@@ -83,7 +83,7 @@ stmt:
 select_stmt: 
     SELECT select_expr_list          { $$ = new_select($2); }
   | SELECT select_expr_list
-    FROM table_references            
+    FROM table_refs            
     opt_where                        { 
                                        $$ = new_select_data($2, $4, $5, parsed->unresolved); 
                                        parsed->unresolved = NULL;
@@ -105,11 +105,12 @@ select_expr:
   | '*'                              { $$ = NULL;}
 ;
 
-table_references:
-    table_reference                  { $$ = new_table_list($1); }
+table_refs:
+    table_ref                        { $$ = new_table_list($1); }
+  | table_refs ',' table_ref         { $$ = append_table_list($1, $3); } 
 ;
 
-table_reference:
+table_ref:
     "identifier"                     { $$ = new_table_ref($1); }
 ;
 

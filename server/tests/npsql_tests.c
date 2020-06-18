@@ -25,13 +25,13 @@ setup_db(const char *db_name, struct query_engine *engine)
     query_engine_init(data_file, log_file, engine);
 
     char *stmts =
-        "create table people (id int, age int, name char(30));"
-        "create table address (id int, street char(40), town char(20), state char(2), zip char(5));"
-        "insert into people (id, age, name) values (1, 36, 'Heather');"
-        "insert into people (id, age, name) values (2, 37, 'Joe');"
-        "insert into people (id, age, name) values (3, 35, 'Mike');"
-        "insert into address (id, street, town, state, zip) values (1, '28 Windsor Lane', 'Lititz', 'PA' , '17543');"
-        "insert into address (id, street, town, state, zip) values (2, '180 Middlesex Ave', 'Piscataway', 'NJ' , '08854');";
+        "create table people (pid int, age int, name char(30));"
+        "create table address (aid int, street char(40), town char(20), state char(2), zip char(5));"
+        "insert into people (pid, age, name) values (1, 36, 'Heather');"
+        // "insert into people (pid, age, name) values (2, 37, 'Joe');"
+        // "insert into people (pid, age, name) values (3, 35, 'Mike');"
+        "insert into address (aid, street, town, state, zip) values (1, '28 Windsor Lane', 'Lititz', 'PA' , '17543');";
+        //"insert into address (aid, street, town, state, zip) values (2, '180 Middlesex Ave', 'Piscataway', 'NJ' , '08854');";
 
     struct query_results *results = results = submit_query(engine, stmts, strlen(stmts));
 
@@ -169,11 +169,53 @@ cleanup:
     free_results(results);
 }
 
+void select_plan_with_join(void)
+{
+    struct query_engine engine = { 0 };
+
+    setup_db("plans_test", &engine);
+
+    char *select = 
+        "select * from people, address where pid = aid;";
+    struct query_results *results = submit_query(&engine, select, strlen(select));
+
+    if (results->parsed_sql->error == true)
+    {
+        goto cleanup;
+    }
+    struct value v = { 0 };
+    while (get_next_set(results))
+    {
+        while (next_set_record(results))
+        {
+            vector_type(struct plan_column) c = results->columns;
+
+            for (size_t i = 0; i < vector_size(c); i++)
+            {
+                if (c[i].expr == NULL)
+                {
+                    results->current_scan->get_value(results->current_scan, c[i].name, &v);
+                }
+                else
+                {
+                    v = eval(c[i].expr, results->current_scan);
+                }
+                
+                reset(&v);
+            }
+        }
+    }
+cleanup:
+    free_query_engine(&engine);
+    free_results(results);
+}
+
 int main(void)
 {
-    select_plan_with_data();
-    select_plan_without_data();
-    select_plan_star();
+    // select_plan_with_data();
+    // select_plan_without_data();
+    // select_plan_star();
+    select_plan_with_join();
     
     return EXIT_SUCCESS;
 }

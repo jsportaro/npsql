@@ -19,30 +19,6 @@ table_scan_next(struct scan *scan);
 static void
 table_scan_get_value(struct scan *scan, char *name, struct value *v);
 
-
-static bool 
-scan_project_next(struct scan *scan)
-{
-    struct scan_project *sp = (struct scan_project *)scan;
-    
-    return sp->scan->next(sp->scan);
-}
-
-struct scan * 
-new_scan_project(vector_type(struct expr_ctx *) expr_list, struct scan *scan)
-{
-    struct scan_project *sp = malloc(sizeof(struct scan_project));
-
-    sp->type = PROJECT_SCAN;
-    sp->expr_list = expr_list;
-    sp->next = &scan_project_next;
-    sp->scan = scan;
-    sp->has_next = true;
-    sp->has_rows = true;
-
-    return (struct scan *)sp;
-}
-
 bool 
 project_scan_next(struct scan *scan)
 {
@@ -73,6 +49,14 @@ project_scan_get_value(struct scan *scan, char *column_name, struct value *value
     return;
 }
 
+void
+project_scan_reset(struct scan *scan)
+{
+    struct project_scan *ps = (struct project_scan *)scan;
+
+    ps->scan->reset(ps->scan);
+}
+
 struct scan * 
 new_project_scan(struct scan *inner)
 {
@@ -80,12 +64,22 @@ new_project_scan(struct scan *inner)
     assert(ps != NULL);
 
     ps->type = PROJECT_SCAN;
-    ps->scan = inner;
     ps->next = &project_scan_next;
     ps->get_value = &project_scan_get_value;
+    ps->reset = &project_scan_reset;
+
     ps->has_next = true;
+    ps->scan = inner;
 
     return (struct scan *)ps;
+}
+
+void
+select_scan_reset(struct scan *scan)
+{
+    struct select_scan *ss = (struct select_scan *)scan;
+
+    ss->scan->reset(ss->scan);
 }
 
 struct scan * 
@@ -95,12 +89,59 @@ new_select_scan(struct scan *inner, struct expr *where_clause)
     assert(ss != NULL);
 
     ss->type = SELECT_SCAN;
-    ss->scan = inner;
     ss->where_clause = where_clause;
     ss->next = &select_scan_next;
     ss->get_value = &select_scan_get_value;
-    
+    ss->reset = &select_scan_reset;    
+    ss->scan = inner;
+
     return (struct scan *)ss;
+}
+
+static bool 
+product_scan_next(struct scan *scan)
+{
+    struct product_scan *ps = (struct product_scan *)scan;
+
+    if (ps->primed != true)
+    {
+        return false;
+    }
+
+    if (ps->r->next(ps->r) == true)
+    {
+        return true;
+    }
+    else
+    {
+        ps->r->reset(ps->r);
+
+        return ps->r->next(ps->r) && ps->l->next(ps->l);
+    }
+}
+
+void 
+product_scan_get_value(struct scan *scan, char *column_name, struct value *value)
+{
+    struct product_scan *ps = (struct product_scan *)scan;
+
+    // Working under the assumption things can get resolved
+    ps->l->get_value(ps->l, column_name, value);
+
+    if (value->type == TYPE_UNKNOWN)
+    {
+        reset(value);
+        ps->r->get_value(ps->r, column_name, value);
+    }
+}
+
+void
+product_plan_reset(struct scan *scan)
+{
+    struct product_scan *ps = (struct product_scan *)scan;
+
+    ps->l->reset(ps->l);
+    ps->r->reset(ps->r); 
 }
 
 struct scan * 
@@ -112,8 +153,20 @@ new_product_scan(struct scan *l, struct scan *r)
     ps->type = PRODUCT_SCAN;
     ps->l = l;
     ps->r = r;
+    ps->next = &product_scan_next;
+    ps->get_value = &product_scan_get_value;
+    
+    ps->primed = ps->l->next(ps->l);
 
     return (struct scan *)ps;
+}
+
+void
+table_scan_reset(struct scan *scan)
+{
+    struct table_scan *ts = (struct table_scan *)scan;
+
+    open_heap_iterator(&ts->ht, &ts->i);
 }
 
 struct scan * 
@@ -128,6 +181,7 @@ new_table_scan(struct table_info *ti, PNUM first_am, struct query_ctx *ctx)
     ts->ti = ti;
     ts->next = &table_scan_next;
     ts->get_value = &table_scan_get_value;
+    ts->reset = &table_scan_reset;
     
     open_heap_table(&ts->ht, ts->ti, ctx->tsx, first_am);
     open_heap_iterator(&ts->ht, &ts->i);
@@ -148,20 +202,22 @@ free_scan(struct scan *s)
         return;
     }
 
-    free_scan(s->scan);
-
     switch (s->type)
     {
         case PROJECT_SCAN: 
-            project = (struct project_scan *)s;
+            project = (struct project_scan *)s;         
+            free_scan(project->scan);
             free(project);
             break;
         case SELECT_SCAN:
             select = (struct select_scan *)s;
+            free_scan(select->scan);
             free(select);
             break;
         case PRODUCT_SCAN:
             product = (struct product_scan *)s;
+            free_scan(product->l);
+            free_scan(product->r);
             free(product);
             break;
         case TABLE_SCAN:

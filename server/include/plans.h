@@ -64,6 +64,7 @@ struct product_plan
 
     struct plan *l;
     struct plan *r;
+    vector_type(struct plan_column *) ppc;
 };
 
 struct table_plan

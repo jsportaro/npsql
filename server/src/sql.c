@@ -120,6 +120,7 @@ new_table_ref(const char *name)
     return table_ref;
 }
 
+
 vector_type(struct table_ref *) 
 new_table_list(struct table_ref * table_ref)
 {
@@ -128,6 +129,14 @@ new_table_list(struct table_ref * table_ref)
     vector_push(table_ref_list, table_ref);
 
     return table_ref_list;
+}
+
+vector_type(struct table_ref *) 
+append_table_list(vector_type(struct table_ref *) table_refs, struct table_ref * table_ref)
+{
+   vector_push(table_refs, table_ref);
+
+    return table_refs;
 }
 
 struct term_expr * 

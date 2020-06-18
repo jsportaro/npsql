@@ -31,30 +31,18 @@ struct scan
     enum scan_type type;
     bool (*next)(struct scan *scan);
     void (*get_value)(struct scan *scan, char *column_name, struct value *v);
-
-    struct scan *scan;
-    bool has_rows;
+    void (*reset)(struct scan *scan);
 };
 
-struct scan_project
-{
-    enum scan_type type;
-    bool (*next)(struct scan *scan);
-    vector_type(struct scan_field) scan_fields;
-    struct scan *scan;
-    bool has_rows;
-
-    vector_type(struct expr_ctx *) expr_list;
-    bool has_next;
-};
 
 struct project_scan
 {
     enum scan_type type;
     bool (*next)(struct scan *scan);
     void (*get_value)(struct scan *scan, char *column_name, struct value *value);
+    void (*reset)(struct scan *scan);
+    
     struct scan *scan;
-
     bool has_next;
 };
 
@@ -63,6 +51,8 @@ struct select_scan
     enum scan_type type;
     bool (*next)(struct scan *scan);
     void (*get_value)(struct scan *scan, char *column_name, struct value *value);
+    void (*reset)(struct scan *scan);
+
     struct scan *scan;
 
     struct expr *where_clause;
@@ -71,9 +61,14 @@ struct select_scan
 struct product_scan
 {
     enum scan_type type;
+    bool (*next)(struct scan *scan);
+    void (*get_value)(struct scan *scan, char *column_name, struct value *value);
+    void (*reset)(struct scan *scan);
 
     struct scan *l;
     struct scan *r;
+
+    bool primed;
 };
 
 struct table_scan
@@ -81,7 +76,7 @@ struct table_scan
     enum scan_type type;
     bool (*next)(struct scan *scan);
     void (*get_value)(struct scan *scan, char *column_name, struct value *value);
-    struct scan *scan;
+    void (*reset)(struct scan *scan);
 
     struct table_info *ti;
     struct heap_table ht;

@@ -102,11 +102,38 @@ bool product_scan_get_column(struct plan *plan, char *name, struct plan_column *
 {
     struct product_plan *pp = (struct product_plan *)plan;
 
-    UNUSED(pp);
-    UNUSED(name);
-    UNUSED(column);
-    //TODO
-    return true;
+    if (pp->l->get_column(pp->l, name, column) == true)
+    {
+        return true;
+    }
+
+    if (pp->r->get_column(pp->r, name, column) == true)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+vector_type(struct plan_column *)
+product_scan_get_columns(struct plan *plan)
+{
+    struct product_plan *pp = (struct product_plan *)plan;
+
+    vector_type(struct plan_column *) lpc = pp->l->get_columns(pp->l);
+    vector_type(struct plan_column *) rpc = pp->r->get_columns(pp->r);
+
+    for (size_t i = 0; i < vector_size(lpc); i++)
+    {
+        vector_push(pp->ppc, lpc[i]);
+    }
+
+    for (size_t i = 0; i < vector_size(rpc); i++)
+    {
+        vector_push(pp->ppc, rpc[i]);
+    }
+
+    return pp->ppc;
 }
 
 struct plan *
@@ -117,8 +144,10 @@ new_product_plan(struct plan *l, struct plan *r)
     pp->type = PRODUCT_PLAN;
     pp->r = r;
     pp->l = l;
-    pp->open = &open_project_scan;
+    pp->ppc = NULL;
+    pp->open = &open_product_scan;
     pp->get_column = &product_scan_get_column;
+    pp->get_columns = &product_scan_get_columns;
 
     return (struct plan *)pp;
 }
@@ -175,13 +204,19 @@ new_table_plan(struct table_ref *table_ref, struct query_ctx *ctx)
 {
     struct table_plan *tp = malloc(sizeof(struct table_plan));
     assert(tp != NULL);
+    memset(tp, 0, sizeof(struct table_plan));
     
     tp->type = TABLE_PLAN;
     tp->open = &open_table_scan;
-    tp->ctx = ctx;
     tp->get_column = &table_scan_get_column;
     tp->get_columns = &table_plan_get_columns;
+
+    tp->ctx = ctx;
+    tp->ti.column_count = 0;
+    tp->ti.record_size = 0;
+   
     tp->columns = NULL;
+    tp->first_am = INVALID_PNUM;
 
     fetch_table_info(table_ref->table_name, &tp->ti, &tp->first_am, ctx->cat, ctx->tsx);
 
@@ -251,6 +286,7 @@ free_plan(struct plan *p)
             product = (struct product_plan *)p;
             free_plan(product->l);
             free_plan(product->r);
+            vector_free(product->ppc);
             free(product);
             product = NULL;
             break;

@@ -143,6 +143,7 @@ vector_type(struct expr_ctx *) new_expr_ctx_list(struct expr *expr);
 vector_type(struct expr_ctx *) append_expr_ctx_list(vector_type(struct expr_ctx *) expr_ctx_list, struct expr *expr);
 
 vector_type(struct table_ref *) new_table_list(struct table_ref * table_ref);
+vector_type(struct table_ref *) append_table_list(vector_type(struct table_ref *) table_refs, struct table_ref * table_ref);
 struct table_ref * new_table_ref(const char *name);
 
 struct term_expr * new_term_expr(enum expr_type type, const void *v);
