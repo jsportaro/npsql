@@ -31,6 +31,7 @@ do_op(enum expr_type t, struct value *l, struct value *r,struct value *v)
 
                 return true;
             }
+            break;
         case EXPR_OR:
             if (l->type == TYPE_BOOL && r->type == TYPE_BOOL)
             {
@@ -39,7 +40,7 @@ do_op(enum expr_type t, struct value *l, struct value *r,struct value *v)
 
                 return true;
             }
-
+            break;
         case EXPR_AND:
             if (l->type == TYPE_BOOL && r->type == TYPE_BOOL)
             {
@@ -48,7 +49,7 @@ do_op(enum expr_type t, struct value *l, struct value *r,struct value *v)
 
                 return true;
             }
-
+            break;
         default:
             return false;
     }
