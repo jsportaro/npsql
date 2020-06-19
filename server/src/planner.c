@@ -128,38 +128,6 @@ resolve_type(struct expr *e, vector_type(struct plan_column *) schema)
     return pr;
 }
 
-// vector_type(struct plan_column) 
-// resolve_references(vector_type(struct plan_column *) schema, vector_type(struct identifier *) unresolved, enum planner_status *status)
-// {
-//     vector_type(struct plan_column) resolved = NULL;
-//     *status = PLANNER_SUCCESS;
-
-//     for (size_t i = 0; i < vector_size(unresolved); i++)
-//     {
-//         struct plan_column c = { 0 };
-        
-//         for (size_t j = 0; j < vector_size(schema); j++)
-//         {
-
-//         }
-
-//         if (found == true)
-//         {
-//             vector_push(resolved, c);
-//         }
-//         else
-//         {
-//             vector_free(resolved);
-//             resolved = NULL;
-//             *status = PLANNER_ERROR;
-            
-//             break;
-//         }
-//     }
-
-//     return resolved;
-// }
-
 struct planner_result *
 create_select_plan(struct select *select, struct query_ctx *ctx)
 {
