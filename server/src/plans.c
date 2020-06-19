@@ -25,14 +25,16 @@ open_project_scan(struct plan *plan)
     }
 }
 
-bool project_plan_get_column(struct plan *plan, char *name, struct plan_column *column)
+bool 
+project_plan_get_column(struct plan *plan, struct identifier *name, struct plan_column *column)
 {
     struct project_plan *pp = (struct project_plan *)plan;
 
     return pp->p->get_column(pp->p, name, column);
 }
 
-vector_type(struct plan_column *) project_plan_get_columns(struct plan *plan)
+vector_type(struct plan_column *) 
+project_plan_get_columns(struct plan *plan)
 {
     struct project_plan *pp = (struct project_plan *)plan;
 
@@ -61,14 +63,16 @@ open_select_scan(struct plan *plan)
     return new_select_scan(sp->p->open(sp->p), sp->where_clause);
 }
 
-bool select_scan_get_column(struct plan *plan, char *name, struct plan_column *column)
+bool 
+select_scan_get_column(struct plan *plan, struct identifier *name, struct plan_column *column)
 {
     struct select_plan *sp = (struct select_plan *)plan;
 
     return sp->p->get_column(sp->p, name, column);
 }
 
-vector_type(struct plan_column *) select_plan_get_columns(struct plan *plan)
+vector_type(struct plan_column *) 
+select_plan_get_columns(struct plan *plan)
 {
     struct select_plan *sp = (struct select_plan *)plan;
 
@@ -98,7 +102,7 @@ open_product_scan(struct plan *plan)
     return new_product_scan(pp->l->open(pp->l), pp->r->open(pp->r));
 }
 
-bool product_scan_get_column(struct plan *plan, char *name, struct plan_column *column)
+bool product_scan_get_column(struct plan *plan, struct identifier *name, struct plan_column *column)
 {
     struct product_plan *pp = (struct product_plan *)plan;
 
@@ -160,13 +164,14 @@ open_table_scan(struct plan *plan)
     return new_table_scan(&tp->ti, tp->first_am, tp->ctx);   
 }
 
-bool table_scan_get_column(struct plan *plan, char *name, struct plan_column *column)
+bool 
+table_scan_get_column(struct plan *plan, struct identifier *name, struct plan_column *column)
 {
     struct table_plan *tp = (struct table_plan *)plan;
 
     for (size_t i = 0; i < tp->ti.column_count; i++)
     {
-        if (strcmp(tp->ti.columns[i].name, name) == 0)
+        if (strcmp(tp->ti.columns[i].name, name->name) == 0)
         {
             column->name = tp->ti.columns[i].name;
             column->size = tp->ti.columns[i].size;
@@ -189,9 +194,11 @@ table_plan_get_columns(struct plan *plan)
         struct plan_column *pc = malloc(sizeof(struct plan_column));
 
         pc->name = tp->ti.columns[i].name;
+        pc->table = tp->ti.table_name;
         pc->size = tp->ti.columns[i].size;
         pc->type = tp->ti.columns[i].type;
-        pc->expr = NULL;
+
+        pc->expr = (struct expr *)new_identifier(tp->ti.table_name, tp->ti.columns[i].name);
         
         vector_push(tp->columns, pc);
     }
@@ -294,6 +301,8 @@ free_plan(struct plan *p)
             table = (struct table_plan *)p;
             for (size_t i = 0; i < vector_size(table->columns); i++)
             {
+                free(((struct term_expr *)table->columns[i]->expr)->value.identifier);
+                free(table->columns[i]->expr);
                 free(table->columns[i]);
             }
             vector_free(table->columns);

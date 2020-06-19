@@ -290,14 +290,7 @@ static void handle_query(struct session *session, size_t payload_size)
             {
                 reset(&v);  
 
-                if (c[i].expr == NULL)
-                {
-                    results->current_scan->get_value(results->current_scan, c[i].name, &v);
-                }
-                else
-                {
-                    v = eval(c[i].expr, results->current_scan);
-                }
+                v = eval(c[i].expr, results->current_scan);
 
                 switch (v.type)
                 {

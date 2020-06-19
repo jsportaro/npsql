@@ -88,14 +88,27 @@ void test_create_table()
     fprintf(stdout, "Done\n");
 }
 
+void test_mulitpart_identifier()
+{
+    char *sql = "select people.name, people.age from people;";
+    size_t len = strlen(sql);
+    struct parsed_sql *result = parse_sql(sql, len);
+
+    assert(result->error == false);
+
+    free_stmts(result);
+    fprintf(stdout, "Done\n");
+}
+
 int main(void)
 {   
     // test_no_data_select();
-    test_select_list();
+    // test_select_list();
     // test_select_all_table_ref();
     // test_select_table_ref();
     // test_select_table_ref_where();
     // test_parse_error();
     // test_create_table();
+    test_mulitpart_identifier();
     exit(EXIT_SUCCESS);
 }

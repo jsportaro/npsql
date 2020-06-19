@@ -57,6 +57,14 @@ struct infix_expr
     struct expr *r;
 };
 
+//  [qualifier].[name]
+//  table_name.field for instance
+struct identifier
+{
+    const char *qualifier;
+    const char *name;
+};
+
 struct term_expr
 {
     enum expr_type type;
@@ -65,6 +73,7 @@ struct term_expr
     {
         int number;
         char *string;
+        struct identifier *identifier;
     } value;
 };
 
@@ -73,16 +82,27 @@ struct table_ref
     const char *table_name;
 };
 
+struct type_def
+{  
+    enum npsql_type type;
+    uint16_t size;
+};
+
+struct column_def
+{
+    const char *name;
+    struct type_def *type;
+};
+
 struct select
 {
     enum stmt_type type;
 
     vector_type(struct expr_ctx *) expr_ctx_list;
     vector_type(struct table_ref *) table_refs;
-
     struct expr *where;
 
-    vector_type(char *) unresolved;
+    vector_type(struct identifier *) unresolved;
 };
 
 struct create_table
@@ -100,18 +120,6 @@ struct insert
     vector_type(struct expr *) values;
 };
 
-struct type_def
-{  
-    enum npsql_type type;
-    uint16_t size;
-};
-
-struct column_def
-{
-    const char *name;
-    struct type_def *type;
-};
-
 struct sql_stmts
 {
     vector_type(struct sql_stmts *) stmts;
@@ -123,7 +131,7 @@ struct parsed_sql
     bool error;
     
     vector_type(struct sql_stmt *) stmts;
-    vector_type(char *) unresolved;
+    vector_type(struct identifier *) unresolved;
 };
 
 void append_stmt(vector_type(struct sql_stmt *) stmt_list, struct sql_stmt * stmt);
@@ -132,7 +140,7 @@ struct sql_stmt * new_select_data(
     vector_type(struct expr_ctx *) expr_ctx_list, 
     vector_type(struct table_ref *) table_refs, 
     struct expr *where,
-    vector_type(char *) unresolved);
+    vector_type(struct identifier *) unresolved);
 
 struct sql_stmt * new_select(vector_type(struct expr_ctx *) expr_list);
 
@@ -147,6 +155,7 @@ vector_type(struct table_ref *) append_table_list(vector_type(struct table_ref *
 struct table_ref * new_table_ref(const char *name);
 
 struct term_expr * new_term_expr(enum expr_type type, const void *v);
+struct term_expr * new_identifier(const char *qualifier, const char *name);
 struct expr * new_infix_expr(enum expr_type type, struct expr *l, struct expr *r);
 
 struct sql_stmt * new_create_table(const char *name, vector_type(struct column_def *) column_defs);

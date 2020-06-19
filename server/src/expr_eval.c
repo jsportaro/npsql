@@ -71,7 +71,7 @@ eval(struct expr *expr, struct scan *scan)
     {
         case EXPR_IDENIFIER:
             term = (struct term_expr *)expr;
-            scan->get_value(scan, term->value.string, &v);
+            scan->get_value(scan, term->value.identifier, &v);
             break;
         case EXPR_INTEGER:
             term = (struct term_expr *)expr;

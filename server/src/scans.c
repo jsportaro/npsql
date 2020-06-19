@@ -7,18 +7,6 @@
 #include <scans.h>
 #include <storage.h>
 
-static bool 
-select_scan_next(struct scan *scan);
-
-static void 
-select_scan_get_value(struct scan *scan, char *column_name, struct value *value);
-
-static bool 
-table_scan_next(struct scan *scan);
-
-static void
-table_scan_get_value(struct scan *scan, char *name, struct value *v);
-
 bool 
 project_scan_next(struct scan *scan)
 {
@@ -40,7 +28,7 @@ project_scan_next(struct scan *scan)
 }
 
 void 
-project_scan_get_value(struct scan *scan, char *column_name, struct value *value)
+project_scan_get_value(struct scan *scan, struct identifier *column_name, struct value *value)
 {
     struct project_scan *ps = (struct project_scan *)scan;
     
@@ -72,6 +60,32 @@ new_project_scan(struct scan *inner)
     ps->scan = inner;
 
     return (struct scan *)ps;
+}
+
+static bool 
+select_scan_next(struct scan *scan)
+{
+    struct select_scan *ss = (struct select_scan *)scan;
+
+    while (ss->scan->next(ss->scan) == true)
+    {
+        struct value v = eval(ss->where_clause, ss->scan);
+
+        if (v.type == TYPE_BOOL && v.as.boolean == true)
+        {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+static void 
+select_scan_get_value(struct scan *scan, struct identifier *column_name, struct value *value)
+{
+    struct select_scan *ss = (struct select_scan *)scan;
+
+    ss->scan->get_value(ss->scan, column_name, value);
 }
 
 void
@@ -121,7 +135,7 @@ product_scan_next(struct scan *scan)
 }
 
 void 
-product_scan_get_value(struct scan *scan, char *column_name, struct value *value)
+product_scan_get_value(struct scan *scan, struct identifier *column_name, struct value *value)
 {
     struct product_scan *ps = (struct product_scan *)scan;
 
@@ -135,8 +149,8 @@ product_scan_get_value(struct scan *scan, char *column_name, struct value *value
     }
 }
 
-void
-product_plan_reset(struct scan *scan)
+static void
+product_scan_reset(struct scan *scan)
 {
     struct product_scan *ps = (struct product_scan *)scan;
 
@@ -155,13 +169,47 @@ new_product_scan(struct scan *l, struct scan *r)
     ps->r = r;
     ps->next = &product_scan_next;
     ps->get_value = &product_scan_get_value;
-    
+    ps->reset = &product_scan_reset;
     ps->primed = ps->l->next(ps->l);
 
     return (struct scan *)ps;
 }
 
-void
+static bool 
+table_scan_next(struct scan *scan)
+{
+    struct table_scan *ts = (struct table_scan *)scan;
+
+    return next_record(&ts->i);
+}
+
+static void
+table_scan_get_value(struct scan *scan, struct identifier *name, struct value *v)
+{
+    struct table_scan *ts = (struct table_scan *)scan;
+    int i = 0;
+
+    if (name->qualifier != NULL)
+    {
+        if (strncmp(name->qualifier, ts->ti->table_name, MAX_TABLE_NAME) != 0)
+        {
+            v->type = TYPE_UNKNOWN;
+
+            return;
+        }
+    }
+    for (; i < ts->ti->column_count; i++)
+    {
+        if (strncmp(name->name, ts->ti->columns[i].name, MAX_COLUMN_NAME) == 0)
+        {
+            break;
+        }
+    }
+
+    get_value(&ts->ht, ts->i.current_record, i, v);
+}
+
+static void
 table_scan_reset(struct scan *scan)
 {
     struct table_scan *ts = (struct table_scan *)scan;
@@ -228,55 +276,3 @@ free_scan(struct scan *s)
             break;
     }
 }
-
-static bool 
-select_scan_next(struct scan *scan)
-{
-    struct select_scan *ss = (struct select_scan *)scan;
-
-    while (ss->scan->next(ss->scan) == true)
-    {
-        struct value v = eval(ss->where_clause, ss->scan);
-
-        if (v.type == TYPE_BOOL && v.as.boolean == true)
-        {
-            return true;
-        }
-    }
-    
-    return false;
-}
-
-static void 
-select_scan_get_value(struct scan *scan, char *column_name, struct value *value)
-{
-    struct select_scan *ss = (struct select_scan *)scan;
-
-    ss->scan->get_value(ss->scan, column_name, value);
-}
-
-static bool 
-table_scan_next(struct scan *scan)
-{
-    struct table_scan *ts = (struct table_scan *)scan;
-
-    return next_record(&ts->i);
-}
-
-static void
-table_scan_get_value(struct scan *scan, char *name, struct value *v)
-{
-    struct table_scan *ts = (struct table_scan *)scan;
-    int i = 0;
-
-    for (; i < ts->ti->column_count; i++)
-    {
-        if (strncmp(name, ts->ti->columns[i].name, MAX_COLUMN_NAME) == 0)
-        {
-            break;
-        }
-    }
-
-    get_value(&ts->ht, ts->i.current_record, i, v);
-}
-

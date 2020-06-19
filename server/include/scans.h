@@ -30,7 +30,7 @@ struct scan
 {
     enum scan_type type;
     bool (*next)(struct scan *scan);
-    void (*get_value)(struct scan *scan, char *column_name, struct value *v);
+    void (*get_value)(struct scan *scan, struct identifier *column_name, struct value *v);
     void (*reset)(struct scan *scan);
 };
 
@@ -39,7 +39,7 @@ struct project_scan
 {
     enum scan_type type;
     bool (*next)(struct scan *scan);
-    void (*get_value)(struct scan *scan, char *column_name, struct value *value);
+    void (*get_value)(struct scan *scan, struct identifier *column_name, struct value *value);
     void (*reset)(struct scan *scan);
     
     struct scan *scan;
@@ -50,11 +50,10 @@ struct select_scan
 {
     enum scan_type type;
     bool (*next)(struct scan *scan);
-    void (*get_value)(struct scan *scan, char *column_name, struct value *value);
+    void (*get_value)(struct scan *scan, struct identifier *column_name, struct value *value);
     void (*reset)(struct scan *scan);
 
     struct scan *scan;
-
     struct expr *where_clause;
 };
 
@@ -62,12 +61,11 @@ struct product_scan
 {
     enum scan_type type;
     bool (*next)(struct scan *scan);
-    void (*get_value)(struct scan *scan, char *column_name, struct value *value);
+    void (*get_value)(struct scan *scan, struct identifier *column_name, struct value *value);
     void (*reset)(struct scan *scan);
 
     struct scan *l;
     struct scan *r;
-
     bool primed;
 };
 
@@ -75,7 +73,7 @@ struct table_scan
 {
     enum scan_type type;
     bool (*next)(struct scan *scan);
-    void (*get_value)(struct scan *scan, char *column_name, struct value *value);
+    void (*get_value)(struct scan *scan, struct identifier *column_name, struct value *value);
     void (*reset)(struct scan *scan);
 
     struct table_info *ti;
@@ -91,4 +89,5 @@ struct scan * new_product_scan(struct scan *l, struct scan *r);
 struct scan * new_table_scan(struct table_info *ti, PNUM first_am, struct query_ctx *ctx);
 
 void free_scan(struct scan *scan);
+
 #endif

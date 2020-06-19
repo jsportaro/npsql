@@ -114,10 +114,9 @@ fetch_table_info(const char *name, struct table_info *ti, PNUM *first_am, struct
     while (next_record(&iterator))
     {
         struct record_id current_rid = iterator.current_record;
-        char tname[MAX_TABLE_NAME];
-        get_char(&table_catalog, current_rid, name_col, tname);
+        get_char(&table_catalog, current_rid, name_col, ti->table_name);
 
-        if (strncmp(name, tname, MAX_COLUMN_NAME) == 0)
+        if (strncmp(name, ti->table_name, MAX_COLUMN_NAME) == 0)
         {
             get_int(&table_catalog, current_rid, am_pid, &fam);
             *first_am = (uint64_t)fam;

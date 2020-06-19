@@ -20,13 +20,25 @@ create_plan(struct sql_stmt *sql, struct query_ctx *ctx)
 }
 
 struct plan_column *
-lookup(vector_type(struct plan_column) c, char *n)
+lookup(vector_type(struct plan_column *) schema, struct identifier *n)
 {
-    for (size_t i = 0; i < vector_size(c); i++)
+    for (size_t i = 0; i < vector_size(schema); i++)
     {
-        if (strcmp(c[i].name, n) == 0)
+        //struct identifier *id = ((struct term_expr *)schema[i]->expr)->value.identifier;
+
+        if (strcmp(schema[i]->name, n->name) == 0)
         {
-            return &c[i];
+            if (n->qualifier != NULL)
+            {
+                if (strcmp(schema[i]->table, n->qualifier) == 0)
+                {
+                    return schema[i];
+                }
+            }
+            else
+            {
+                return schema[i];
+            }
         }
     }
     
@@ -34,7 +46,7 @@ lookup(vector_type(struct plan_column) c, char *n)
 }
 
 struct plan_column
-resolve_type(struct expr *e, vector_type(struct plan_column) c)
+resolve_type(struct expr *e, vector_type(struct plan_column *) schema)
 {
     struct term_expr *term;
     struct infix_expr *infix = NULL;
@@ -44,7 +56,7 @@ resolve_type(struct expr *e, vector_type(struct plan_column) c)
     {
         case EXPR_IDENIFIER:
             term = (struct term_expr *)e;
-            struct plan_column *found = lookup(c, term->value.string);
+            struct plan_column *found = lookup(schema, term->value.identifier);
 
             if (found != NULL)
             {   
@@ -65,8 +77,8 @@ resolve_type(struct expr *e, vector_type(struct plan_column) c)
         case EXPR_MUL:
         case EXPR_DIV: {
                 infix = (struct infix_expr *)e;
-                struct plan_column tl = resolve_type(infix->l, c);
-                struct plan_column tr = resolve_type(infix->r, c);
+                struct plan_column tl = resolve_type(infix->l, schema);
+                struct plan_column tr = resolve_type(infix->r, schema);
 
                 if (tl.type == tr.type)
                 {
@@ -80,8 +92,8 @@ resolve_type(struct expr *e, vector_type(struct plan_column) c)
             break;
         case EXPR_EQU: {
                 infix = (struct infix_expr *)e;
-                struct plan_column tl = resolve_type(infix->l, c);
-                struct plan_column tr = resolve_type(infix->r, c);
+                struct plan_column tl = resolve_type(infix->l, schema);
+                struct plan_column tr = resolve_type(infix->r, schema);
 
                 if (tl.type == tr.type)
                 {
@@ -96,8 +108,8 @@ resolve_type(struct expr *e, vector_type(struct plan_column) c)
         case EXPR_AND:
         case EXPR_OR:  {
                 infix = (struct infix_expr *)e;
-                struct plan_column tl = resolve_type(infix->l, c);
-                struct plan_column tr = resolve_type(infix->r, c);
+                struct plan_column tl = resolve_type(infix->l, schema);
+                struct plan_column tr = resolve_type(infix->r, schema);
 
                 if (tl.type == TYPE_BOOL && tr.type == TYPE_BOOL)
                 {
@@ -116,33 +128,37 @@ resolve_type(struct expr *e, vector_type(struct plan_column) c)
     return pr;
 }
 
-vector_type(struct plan_column) 
-resolve_references(struct plan *plan, vector_type(char *) unresolved, enum planner_status *status)
-{
-    vector_type(struct plan_column) resolved = NULL;
-    *status = PLANNER_SUCCESS;
+// vector_type(struct plan_column) 
+// resolve_references(vector_type(struct plan_column *) schema, vector_type(struct identifier *) unresolved, enum planner_status *status)
+// {
+//     vector_type(struct plan_column) resolved = NULL;
+//     *status = PLANNER_SUCCESS;
 
-    for (size_t i = 0; i < vector_size(unresolved); i++)
-    {
-        struct plan_column c = { 0 };
-        bool found = plan->get_column(plan, unresolved[i], &c);
+//     for (size_t i = 0; i < vector_size(unresolved); i++)
+//     {
+//         struct plan_column c = { 0 };
+        
+//         for (size_t j = 0; j < vector_size(schema); j++)
+//         {
 
-        if (found == true)
-        {
-            vector_push(resolved, c);
-        }
-        else
-        {
-            vector_free(resolved);
-            resolved = NULL;
-            *status = PLANNER_ERROR;
+//         }
+
+//         if (found == true)
+//         {
+//             vector_push(resolved, c);
+//         }
+//         else
+//         {
+//             vector_free(resolved);
+//             resolved = NULL;
+//             *status = PLANNER_ERROR;
             
-            break;
-        }
-    }
+//             break;
+//         }
+//     }
 
-    return resolved;
-}
+//     return resolved;
+// }
 
 struct planner_result *
 create_select_plan(struct select *select, struct query_ctx *ctx)
@@ -154,14 +170,9 @@ create_select_plan(struct select *select, struct query_ctx *ctx)
     result->plan    = plan;
     result->columns = NULL;
     result->status  = PLANNER_SUCCESS;
-
-    vector_type(struct plan_column) resolved = resolve_references(plan, select->unresolved, &result->status);
-
-    if (result->status == PLANNER_ERROR)
-    {
-        goto end;
-    }
     
+    vector_type(struct plan_column *) schema = plan->get_columns(plan);
+
     size_t exprs = vector_size(select->expr_ctx_list);
 
     // Determine column type and type safety
@@ -169,7 +180,7 @@ create_select_plan(struct select *select, struct query_ctx *ctx)
     {
         if (select->expr_ctx_list[i]->expr != NULL)
         {
-            struct plan_column pc = resolve_type(select->expr_ctx_list[i]->expr, resolved);
+            struct plan_column pc = resolve_type(select->expr_ctx_list[i]->expr, schema);
             
             if (pc.type == TYPE_UNKNOWN)
             {
@@ -177,14 +188,14 @@ create_select_plan(struct select *select, struct query_ctx *ctx)
                 goto end;
             }
             
-            if (select->expr_ctx_list[i]->expr->type == EXPR_IDENIFIER)
-            {
-                column.name = ((struct term_expr *)select->expr_ctx_list[i]->expr)->value.string;
-            }
-            else
-            {
+            // if (select->expr_ctx_list[i]->expr->type == EXPR_IDENIFIER)
+            // {
+            //     column.name = ((struct term_expr *)select->expr_ctx_list[i]->expr)->value.string;
+            // }
+            // else
+            // {
                 column.name = select->expr_ctx_list[i]->col_name;
-            }
+            // }
 
             column.type = pc.type;
             column.size = pc.size;
@@ -194,8 +205,6 @@ create_select_plan(struct select *select, struct query_ctx *ctx)
         }
         else
         {
-            vector_type(struct plan_column *) schema = plan->get_columns(plan);
-
             for (size_t i = 0; i < vector_size(schema); i++)
             {
                 vector_push(result->columns, *schema[i]);
@@ -206,7 +215,7 @@ create_select_plan(struct select *select, struct query_ctx *ctx)
     // Ensure where condense to bool
     if (select->where != NULL)
     {
-        struct plan_column where_type = resolve_type(select->where, resolved);
+        struct plan_column where_type = resolve_type(select->where, schema);
         if (where_type.type != TYPE_BOOL)
         {
             result->status = PLANNER_ERROR;
@@ -214,6 +223,5 @@ create_select_plan(struct select *select, struct query_ctx *ctx)
         }
     }
 end:
-    vector_free(resolved);
     return result;
 }

@@ -22,6 +22,7 @@ struct plan_column
 {
     size_t size;
     char *name;
+    char *table;
     enum npsql_type type;
     struct expr *expr;
 };
@@ -30,7 +31,7 @@ struct plan
 {
     enum plan_type type;
     struct scan *(*open)(struct plan *plan);
-    bool (*get_column)(struct plan *plan, char *name, struct plan_column *column);
+    bool (*get_column)(struct plan *plan, struct identifier *name, struct plan_column *column);
     vector_type(struct plan_column *) (*get_columns)(struct plan *plan);
 };
 
@@ -38,7 +39,7 @@ struct project_plan
 {
     enum plan_type type;
     struct scan * (*open)(struct plan *project);
-    bool (*get_column)(struct plan *plan, char *name, struct plan_column *column);
+    bool (*get_column)(struct plan *plan, struct identifier *name, struct plan_column *column);
     vector_type(struct plan_column *) (*get_columns)(struct plan *plan);
 
     struct plan *p;
@@ -48,7 +49,7 @@ struct select_plan
 {
     enum plan_type type;
     struct scan * (*open)(struct plan *project);
-    bool (*get_column)(struct plan *plan, char *name, struct plan_column *column);
+    bool (*get_column)(struct plan *plan, struct identifier *name, struct plan_column *column);
     vector_type(struct plan_column *) (*get_columns)(struct plan *plan);
 
     struct plan *p;
@@ -59,7 +60,7 @@ struct product_plan
 {
     enum plan_type type;
     struct scan * (*open)(struct plan *project);
-    bool (*get_column)(struct plan *plan, char *name, struct plan_column *column);
+    bool (*get_column)(struct plan *plan, struct identifier *name, struct plan_column *column);
     vector_type(struct plan_column *) (*get_columns)(struct plan *plan);
 
     struct plan *l;
@@ -71,7 +72,7 @@ struct table_plan
 {
     enum plan_type type;
     struct scan *(*open)(struct plan *plan);
-    bool (*get_column)(struct plan *plan, char *name, struct plan_column *column);
+    bool (*get_column)(struct plan *plan, struct identifier *name, struct plan_column *column);
     vector_type(struct plan_column *) (*get_columns)(struct plan *plan);
 
     struct query_ctx *ctx;

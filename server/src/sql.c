@@ -34,7 +34,7 @@ new_select_data(
     vector_type(struct expr_ctx *) expr_ctx_list, 
     vector_type(struct table_ref *) table_refs, 
     struct expr *where,
-    vector_type(char *) unresolved)
+    vector_type(struct identifier *) unresolved)
 {
     struct select *select = malloc(sizeof(struct select));
 
@@ -142,7 +142,7 @@ append_table_list(vector_type(struct table_ref *) table_refs, struct table_ref *
 struct term_expr * 
 new_term_expr(enum expr_type type, const void *v)
 {
-    struct term_expr *expr = (struct term_expr *) malloc(sizeof(struct term_expr));
+    struct term_expr *expr = malloc(sizeof(struct term_expr));
     
     assert(expr != NULL);
 
@@ -151,15 +151,30 @@ new_term_expr(enum expr_type type, const void *v)
 
     switch (type) {
         case EXPR_STRING:
-        case EXPR_IDENIFIER:
             expr->value.string = (char *)v;
             break;
         case EXPR_INTEGER:
             expr->value.number = *((long *) v);
             break;
+        case EXPR_IDENIFIER:
+            break;
         default:
             break;
     }
+    return expr;
+}
+
+struct term_expr * 
+new_identifier(const char *qualifier, const char *name)
+{
+    struct term_expr *expr = malloc(sizeof(struct term_expr));
+    struct identifier *id = malloc(sizeof(struct identifier));
+
+    expr->type = EXPR_IDENIFIER;
+    expr->value.identifier = id;
+    expr->value.identifier->qualifier = qualifier;
+    expr->value.identifier->name = name;
+
     return expr;
 }
 
@@ -385,7 +400,7 @@ free_expr(struct expr *expr)
     }
 
     struct infix_expr *infix = NULL;
-    struct term_expr *term = NULL;
+    struct term_expr *term   = NULL;
 
     switch(expr->type)
     {
@@ -393,6 +408,15 @@ free_expr(struct expr *expr)
             free(expr);
             break;
         case EXPR_IDENIFIER:
+            term = (struct term_expr *)expr;
+            free((char *)term->value.identifier->name);
+            if (term->value.identifier->qualifier != NULL)
+            {
+                free((char *)term->value.identifier->qualifier);
+            }
+            free(term->value.identifier);
+            free(term);
+            break;
         case EXPR_STRING:
             term = (struct term_expr *)expr;
             free(term->value.string);

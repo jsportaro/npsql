@@ -167,10 +167,15 @@ expr:
     "string"                         { $$ =  (struct expr *)new_term_expr(EXPR_STRING,  $1); }
   | "integer"                        { $$ =  (struct expr *)new_term_expr(EXPR_INTEGER, (const void *)(&$1)); }
   | "identifier"                     { 
-                                        struct term_expr *t = new_term_expr(EXPR_IDENIFIER, $1); 
-                                        vector_push(parsed->unresolved, t->value.string);  
+                                        struct term_expr *t = new_identifier(NULL, $1); 
+                                        vector_push(parsed->unresolved, t->value.identifier);  
                                         $$ = (struct expr *)t; 
                                      }
+  | "identifier" '.' "identifier"    { 
+                                        struct term_expr *t = new_identifier($1, $3); 
+                                        vector_push(parsed->unresolved, t->value.identifier);  
+                                        $$ = (struct expr *)t; 
+                                     }                      
 ;
 
 expr: 
