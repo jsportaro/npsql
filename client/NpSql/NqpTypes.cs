@@ -6,7 +6,7 @@ namespace NpSql.Nqp
 {
     public enum NqpTypes
     {
-        Int,
+        Int = 1,
         Char
     }
 }

@@ -119,10 +119,12 @@ namespace NpSql_Cli
                 {
                     command.CommandText = sql;
                     Stopwatch sw = new Stopwatch();
-                    
+
+                    sw.Start();
                     using (var reader = (NpSqlDataReader)command.ExecuteReader())
                     {
                         int rowLength = WriteColumnHeader(reader);
+
                         rowLength = WriteVerticalSeperator(reader, rowLength);
 
                         while (reader.Read())
@@ -130,8 +132,9 @@ namespace NpSql_Cli
                             WriteRow(reader);
                         }
 
+                        sw.Stop();
                         rowLength = WriteVerticalSeperator(reader, rowLength);
-                        Console.WriteLine();
+                        Console.WriteLine($"Query ran in ({sw.Elapsed})");
                     }
                 }
             }
@@ -165,11 +168,14 @@ namespace NpSql_Cli
 
                 if (s.Length > columnLength)
                 {
-                    s = s.Substring(0, s.Length - 5);
+                    s = s.Substring(0, columnLength - 5);
                     s += "...";
                 }
 
                 leadingSpace = columnLength - (s.Length + 1);
+
+                if (leadingSpace < 0)
+                    leadingSpace = 0;
 
                 Console.Write(new string(' ', leadingSpace));
                 Console.Write(s);
@@ -184,6 +190,11 @@ namespace NpSql_Cli
         private static int WriteColumnHeader(NpSqlDataReader reader)
         {
             var rowLength = 2;
+
+            if (reader.GetColumnSchema().Count() == 0)
+            {
+                return 0;
+            }
 
             rowLength = WriteVerticalSeperator(reader, rowLength);
             Console.Write("  |");
@@ -209,6 +220,10 @@ namespace NpSql_Cli
 
         private static int WriteVerticalSeperator(NpSqlDataReader reader, int rowLength)
         {
+            if (rowLength == 0)
+            {
+                return rowLength;
+            }
             Console.Write("  +");
             foreach (NpSqlColumnDefinition column in reader.GetColumnSchema())
             {
