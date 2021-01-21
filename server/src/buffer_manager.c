@@ -25,8 +25,10 @@ buffer_manager_initialize(
     bf->log_file = log_file;
     bf->available_buffers = BUFFER_POOL_SIZE;
     bf->lock = create_mutex();
+    bf->buffers = malloc(BUFFER_POOL_SIZE * sizeof(struct buffer));
+    bf->buffer_pool = malloc(BUFFER_POOL_SIZE * PAGE_SIZE);
 
-    memset(bf->buffer_pool, 0, sizeof(bf->buffer_pool));
+    memset(bf->buffer_pool, 0, BUFFER_POOL_SIZE * PAGE_SIZE);
     
     for (uint16_t i = 0; i < BUFFER_POOL_SIZE; i++)
     {
