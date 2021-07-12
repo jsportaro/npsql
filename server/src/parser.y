@@ -133,25 +133,24 @@ create_col_list:
 ;
 
 create_def:
-    "identifier" data_type           { $$ = create_column_def($1, $2); }
+    "identifier" data_type           { $$ = create_column_def($1, $2);        }
 ;
 
 data_type:
-    INT                              { $$ = create_type_def(TYPE_INT, 4); }
-  | CHAR '(' "integer" ')'           { $$ = create_type_def(TYPE_CHAR, $3); }
+    INT                              { $$ = create_type_def(TYPE_INT, 4);     }
+  | CHAR '(' "integer" ')'           { $$ = create_type_def(TYPE_CHAR, $3);   }
 ;
 
 insert_stmt:
     INSERT INTO "identifier" 
     '(' column_list ')'
     VALUES
-    '(' value_list ')'               { 
-                                       $$ = new_insert($3, $5, $9); }
+    '(' value_list ')'               { $$ = new_insert($3, $5, $9);           }
 ;
 
 column_list:
-     "identifier"                    { $$ = new_column_list($1);          }
-   | column_list ',' "identifier"    { $$ = append_column_list($1, $3);   }
+     "identifier"                    { $$ = new_column_list($1);              }
+   | column_list ',' "identifier"    { $$ = append_column_list($1, $3);       }
 ;
 
 value_list: 
