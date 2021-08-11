@@ -24,8 +24,6 @@ lookup(vector_type(struct plan_column *) schema, struct identifier *n)
 {
     for (size_t i = 0; i < vector_size(schema); i++)
     {
-        //struct identifier *id = ((struct term_expr *)schema[i]->expr)->value.identifier;
-
         if (strcmp(schema[i]->name, n->name) == 0)
         {
             if (n->qualifier != NULL)
