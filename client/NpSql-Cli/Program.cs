@@ -10,24 +10,24 @@ namespace NpSql_Cli
     class Program
     {
         static NpSqlConnection connection = default(NpSqlConnection);
+
         static void Main(string[] args)
         {
-            //Host=localhost;Port=15151
             var commandSplitChar = new char []{ ' ' };
-            var exit = false;
-            var hasConnection = false;
+            var exit             = false;
+            var hasConnection    = false;
             var connectionString = string.Empty;
-            var defaultPort = 15151;
-            NpSqlConnection connection = null;
+            var defaultPort      = 15151;
+            var prompt           =  "npsql > ";
+            var qprompt          = "      > ";
 
-            var prompt =  "npsql > ";
-            var qprompt = "      > ";
+            NpSqlConnection connection = null;
 
             while (!exit)
             {
                 Console.Write(prompt);
 
-                var sql = Console.ReadLine();
+                var sql          = Console.ReadLine();
                 var commandParts = sql.Split(commandSplitChar);
 
                 switch(commandParts[0].ToLower())
@@ -74,7 +74,7 @@ namespace NpSql_Cli
                         }
                         else
                         {
-                            StringBuilder sb = new StringBuilder();
+                            var sb = new StringBuilder();
                             Console.Write(qprompt);
                             var entry = Console.ReadLine();
 
@@ -103,7 +103,6 @@ namespace NpSql_Cli
                 }
             }
 
-
             if (connection != null)
             {
                 connection.Dispose();
@@ -118,14 +117,13 @@ namespace NpSql_Cli
                 using (var command = new NpSqlCommand(conn))
                 {
                     command.CommandText = sql;
-                    Stopwatch sw = new Stopwatch();
+                    var sw              = new Stopwatch();
 
                     sw.Start();
                     using (var reader = (NpSqlDataReader)command.ExecuteReader())
                     {
-                        int rowLength = WriteColumnHeader(reader);
-
-                        rowLength = WriteVerticalSeperator(reader, rowLength);
+                        var rowLength = WriteColumnHeader(reader);
+                        rowLength     = WriteVerticalSeperator(reader, rowLength);
 
                         while (reader.Read())
                         {
@@ -146,18 +144,18 @@ namespace NpSql_Cli
 
         private static void WriteRow(NpSqlDataReader reader)
         {
+            var i            = 0;
+            var leadingSpace = 0;
+            var s            = string.Empty;
+
             Console.Write("  |");
 
-            var i = 0;
-            var leadingSpace = 0;
-            var s = string.Empty;
             foreach (NpSqlColumnDefinition column in reader.GetColumnSchema())
             {
                 var columnLength = column.Name.Length + 8;
 
                 switch (column.Type)
                 {
-
                     case NpSql.Nqp.NqpTypes.Char:
                         s = reader.GetString(i).Trim();
                         break;
@@ -200,7 +198,6 @@ namespace NpSql_Cli
             Console.Write("  |");
             foreach (NpSqlColumnDefinition column in reader.GetColumnSchema())
             {
-
                 var minLength = column.Name.Length + 8; // 4 whitespace before and aftername
                                                         //Write beginning whitespace
                 Console.Write(new string(' ', 4));
@@ -212,7 +209,6 @@ namespace NpSql_Cli
 
                 rowLength += minLength + 1;
             }
-
 
             Console.WriteLine();
             return rowLength;
@@ -227,11 +223,9 @@ namespace NpSql_Cli
             Console.Write("  +");
             foreach (NpSqlColumnDefinition column in reader.GetColumnSchema())
             {
-
                 var minLength = column.Name.Length + 8; // 4 whitespace before and aftername
                 Console.Write(new string('-', minLength));
                 Console.Write("+");
-
                 rowLength += minLength + 1;
             }
 
