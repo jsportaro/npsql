@@ -6,47 +6,25 @@
 #include <string.h>
 #include <stdio.h>
 
-void 
-append_stmt(vector_type(struct sql_stmt *) stmt_list, struct sql_stmt * stmt)
-{
-    vector_push(stmt_list, stmt);
-}
-
-struct sql_stmt *new_select
-(vector_type(struct expr_ctx *) expr_ctx_list)
-{
-    struct select *select = malloc(sizeof(struct select));
-
-    assert(select != NULL);
-
-    select->expr_ctx_list = NULL;
-    select->table_refs    = NULL;
-    select->where         = NULL;
-    select->type          = STMT_SELECT;
-    select->unresolved    = NULL;
-    select->expr_ctx_list = expr_ctx_list;
-
-    return (struct sql_stmt *)select;
-}
-
-struct sql_stmt *
-new_select_data(
+SqlStatement *NewSelectStatement
+(
     vector_type(struct expr_ctx *) expr_ctx_list, 
     vector_type(struct table_ref *) table_refs, 
     struct expr *where,
     vector_type(struct identifier *) unresolved)
 {
-    struct select *select = malloc(sizeof(struct select));
+    SqlStatement *statement = malloc(sizeof(SqlStatement));
 
-    assert(select != NULL);
+    assert(statement != NULL);
 
-    select->type          = STMT_SELECT;
-    select->expr_ctx_list = expr_ctx_list;
-    select->table_refs    = table_refs;
-    select->where         = where;
-    select->unresolved    = unresolved;
+    InitListHead(&statement->list);
+    statement->type                 = STATEMENT_SELECT;
+    statement->select.expr_ctx_list = expr_ctx_list;
+    statement->select.table_refs    = table_refs;
+    statement->select.where         = where;
+    statement->select.unresolved    = unresolved;
 
-    return (struct sql_stmt *)select;
+    return statement;
 }
 
 vector_type(struct expr *)
@@ -195,18 +173,20 @@ new_infix_expr(enum expr_type type, struct expr *l, struct expr *r)
     return (struct expr *)expr;
 }
 
-struct sql_stmt * 
-new_create_table(const char *name, vector_type(struct column_def *) column_defs)
+SqlStatement *NewCreateTableStatement
+(const char *name, vector_type(struct column_def *) column_defs)
 {
-    struct create_table *ct = malloc(sizeof(struct create_table));
+    SqlStatement *statement = malloc(sizeof(SqlStatement));
 
-    assert(ct != NULL);
+    assert(statement != NULL);
 
-    ct->type = STMT_CREATE_TABLE;
-    ct->table_name = name;
-    ct->column_defs = column_defs;
+    InitListHead(&statement->list);
 
-    return (struct sql_stmt *)ct;
+    statement->type = STATEMENT_CREATE_TABLE;
+    statement->create_table.table_name = name;
+    statement->create_table.column_defs = column_defs;
+
+    return statement;
 }
 
 vector_type(struct column_def *) 
@@ -253,17 +233,22 @@ create_type_def(enum npsql_type type, uint16_t size)
     return td;
 }
 
-struct sql_stmt *
-new_insert(const char *name, vector_type(char *) columns, vector_type(struct expr *) values)
+SqlStatement *
+NewInsertStatement(const char *name, vector_type(char *) columns, vector_type(struct expr *) values)
 {
-    struct insert *insert = malloc(sizeof(struct insert));
+    SqlStatement *statement = malloc(sizeof(SqlStatement));
 
-    insert->type = STMT_INSERT_INTO;
-    insert->columns = columns;
-    insert->values = values;
-    insert->name = name;
+    assert(statement != NULL);
 
-    return (struct sql_stmt *)insert;
+    InitListHead(&statement->list);
+
+    statement->type = STATEMENT_INSERT;
+
+    statement->insert.columns = columns;
+    statement->insert.values = values;
+    statement->insert.name = name;
+
+    return statement;
 }
 
 vector_type(char *) new_column_list(const char *column)

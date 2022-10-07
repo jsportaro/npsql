@@ -30,7 +30,7 @@ setup_db(const char *db_name, struct query_engine *engine)
         "insert into people (id, aid, age, name) values (1, 1, 36, 'Heather');"
         "insert into people (id, aid, age, name) values (2, 1, 37, 'Joe');"
         "insert into people (id, aid, age, name) values (3, 2, 35, 'Mike');"
-        "insert into address (id, street, town, state, zip) values (1, '28 Windsor Lane', 'Lititz', 'PA', '17543');";
+        "insert into address (id, street, town, state, zip) values (1, '28 Windsor Lane', 'Lititz', 'PA', '17543');"
         "insert into address (id, street, town, state, zip) values (2, '180 Middlesex Ave', 'Piscataway', 'NJ', '08854');";
 
     struct query_results *results = results = submit_query(engine, stmts, strlen(stmts));

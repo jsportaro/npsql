@@ -29,7 +29,9 @@
         "iosfwd": "cpp",
         "limits": "cpp",
         "new": "cpp",
-        "streambuf": "cpp"
+        "streambuf": "cpp",
+        "sql.h": "c",
+        "list.h": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

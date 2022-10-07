@@ -9,6 +9,7 @@
 #include <sql.h>
 #include <parser.gen.h>
 #include <lexer.gen.h>
+#include <list.h>
 #include <vector.h>
 #include <common.h>
 #include <stdlib.h>
@@ -53,7 +54,7 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 %token VALUES
 %token WHERE
 
-%type <struct sql_stmt *> stmt select_stmt create_table_stmt insert_stmt
+%type <SqlStatement *> stmt select_stmt create_table_stmt insert_stmt
 %type <vector_type(struct expr_ctx *)> select_expr_list
 %type <vector_type(struct expr *)> value_list
 %type <vector_type(struct table_ref *)> table_refs
@@ -70,8 +71,12 @@ void yyerror (yyscan_t *locp, struct parsed_sql *parsed, char const *msg);
 %%
 
 stmt_list: 
-    stmt ';'                         { vector_push(parsed->stmts, $1); }
-  | stmt_list stmt ';'               { vector_push(parsed->stmts, $2); } 
+    stmt ';'                         { 
+                                       ListAddTail(&parsed->statements, &$1->list);
+                                     }
+  | stmt_list stmt ';'               { 
+                                       ListAddTail(&parsed->statements, &$2->list);
+                                     } 
 ;
 
 stmt: 
@@ -81,12 +86,14 @@ stmt:
 ;
 
 select_stmt: 
-    SELECT select_expr_list          { $$ = new_select($2); }
+    SELECT select_expr_list          { 
+                                       $$ = NewSelectStatement($2, NULL, NULL, NULL); 
+                                     }
   | SELECT select_expr_list
     FROM table_refs            
     opt_where                        { 
-                                       $$ = new_select_data($2, $4, $5, parsed->unresolved); 
-                                       parsed->unresolved = NULL;
+                                       $$ = NewSelectStatement($2, $4, $5, parsed->unresolved); 
+                                       parsed->unresolved = NULL;  // Memory leak?
                                      }
 ;  
 
@@ -124,7 +131,7 @@ opt_where:
 create_table_stmt:
     CREATE TABLE 
     "identifier" 
-    '(' create_col_list  ')'         { $$ = new_create_table($3, $5); }
+    '(' create_col_list  ')'         { $$ = NewCreateTableStatement($3, $5); }
 ;
 
 create_col_list: 
@@ -145,7 +152,7 @@ insert_stmt:
     INSERT INTO "identifier" 
     '(' column_list ')'
     VALUES
-    '(' value_list ')'               { $$ = new_insert($3, $5, $9);           }
+    '(' value_list ')'               { $$ = NewInsertStatement($3, $5, $9);   }
 ;
 
 column_list:
